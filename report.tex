@@ -1,0 +1,85 @@
+% ******************************************************************	********************************************
+%
+% **************************************************************************************************************
+\documentclass[ twoside,openright,titlepage,numbers=noenddot,%
+                toc=bibliography,toc=listof,%
+                footinclude=false,headinclude=false,cleardoublepage=empty,%
+                BCOR=5mm,paper=a4,fontsize=11pt,%DIV=14,%
+                ngerman%
+                ]{scrreprt}
+
+%***************************************************************************************************************
+% Note: Make all your adjustments in here
+%***************************************************************************************************************
+\newcounter{dummy} % necessary for correct hyperlinks (to index, bib, etc.)
+
+\input{preamble/macros}
+\input{preamble/packages}
+\input{preamble/style}
+
+%********************************************************************
+% Hyphenation
+%*******************************************************
+\hyphenation{multi-pho-ton io-ni-za-tion}
+
+
+%********************************************************************
+% Split bibs for each author
+%*******************************************************
+\bibliography{bib/mark.bib}
+\addbibresource{bib/jannik.bib}
+\addbibresource{bib/matthias.bib}
+\addbibresource{bib/jorge.bib}
+
+
+%********************************************************************
+% GO!GO!GO! MOVE IT!
+%*******************************************************
+\begin{document}
+\frenchspacing
+\raggedbottom
+\selectlanguage{ngerman} % american ngerman
+\pagenumbering{roman}
+\pagestyle{plain}
+%*******************************************************
+% Frontmatter
+%*******************************************************
+\include{frontBackmatter/Titlepage}
+\cleardoublepage\include{frontBackmatter/Contents}
+
+%*******************************************************
+% Mainmatter
+%*******************************************************
+\cleardoublepage
+\pagenumbering{arabic}
+%\pagestyle{headings}
+\pagestyle{scrheadings}
+
+\cleardoublepage
+%% If necessary, move chapters around so it fits best. First leave it like this, to prevent merge conflicts.
+\include{content/jannik/content_jannik}
+\include{content/matthias/content_matthias}
+\include{content/mark/content_mark}
+\include{content/jorge/content_jorge}
+
+%********************************************************************
+% Bibliography/References
+%*******************************************************
+\cleardoublepage\printbibliography
+
+%********************************************************************
+% List of Figures etc.
+%*******************************************************
+\cleardoublepage\include{frontBackmatter/ListOfs}
+\include{frontBackmatter/Abbreviations}
+
+% ********************************************************************
+% Appendix/Anhang
+%***************************************************************
+\appendix
+\part*{Anhang}
+%\cleardoublepage\include{Chapters/Anhang-A}
+
+%*******************************************************
+\end{document}
+% ********************************************************************

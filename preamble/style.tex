@@ -1,0 +1,187 @@
+\definecolor{ingwi}{cmyk}{.9,0,0,0} %% HTW Color
+% ****************************************************************************************************
+% Setup code listings
+% ****************************************************************************************************
+%\lstset{emph={trueIndex,root},emphstyle=\color{BlueViolet}}%\underbar} % for special keywords
+\lstset{language=[LaTeX]Tex,%C++,
+    keywordstyle=\color{RoyalBlue},%\bfseries,
+    basicstyle=\small\ttfamily,
+    %identifierstyle=\color{NavyBlue},
+    commentstyle=\color{Green}\ttfamily,
+    stringstyle=\rmfamily,
+    numbers=none,%left,%
+    numberstyle=\scriptsize,%\tiny
+    stepnumber=5,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frameround=ftff,
+    frame=single,
+    texcl=true,
+    belowcaptionskip=.75\baselineskip,
+    %frame=L
+}
+%Styles für verschiedene Sprachen festlegen, z.B. Java
+\lstdefinestyle{Java}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  language=Java,
+  texcl=true,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange}
+}
+% ****************************************************************************************************
+% Prettify table of contents
+% ****************************************************************************************************
+
+\KOMAoptions{%
+	%%% Setting of 'Style' and 'Content' of TOC
+	% toc=left, %
+	toc=indented,%
+}%  	
+\newcommand{\PartialToc}[1]{%
+	\thispagestyle{plain}
+	\startcontents[part]
+	\section*{\contentsname}
+	\printcontents[part]{}{0}{\setcounter{tocdepth}{#1}}
+}
+\usetocstyle{KOMAlike}
+\newcommand{\fontTOC}{\rmfamily}
+\setkomafont{partentry}{\fontTOC\large}
+\setkomafont{partentrypagenumber}{\fontTOC}
+
+\KOMAoptions{%
+	%%% Setting of 'Style' and 'Content' of Lists 
+	%%% (figures, tables etc)
+	% --- General List Style ---
+	% listof=left, % tabular styles
+	listof=indented, % hierarchical style
+	% --- Appearance of Lists in TOC
+	listof=notoc, % Lists are not part of the TOC
+	% listof=totoc, % add Lists to TOC without number
+	% listof=totocnumbered, % add Lists to TOC with number
+	%%% index in toc
+	index=nottotoc, % index is not part of the TOC
+	%index=totoc, % add index to TOC without number
+	%%% bib in toc
+	% bibliography=nottotoc, % Bibliography is not part of the TOC
+	% bibliography=totocnumbered, % add Bibliography to TOC with number
+	bibliography=totoc % add Bibliography to TOC without number
+}%  
+% ****************************************************************************************************
+% Setup hyperref
+% ****************************************************************************************************
+
+\hypersetup{
+%%% General options
+  ,draft=false, % all hypertext options are turned off
+  ,final=true   % all hypertext options are turned on
+  ,debug=false  % extra diagnostic messages are printed in the log file
+  ,hypertexnames=true % use guessable names for links
+  ,naturalnames=false % use LaTeX-computed names for links
+  ,setpagesize=true   % sets page size by special driver commands
+%%% Configuration options
+  ,raiselinks=true    % forces commands to reflect the
+                      % real height of the link 
+  ,breaklinks=true    % Allows link text to break across lines
+  ,pageanchor=true    % Determines whether every page is given an implicit
+                      % anchor at the top left corner. 
+  ,plainpages=false   % Forces page anchors to be named by the arabic
+                      % form of the page number, rather than the formatted form.
+%%% Extension options
+  ,linktocpage=true   % make page number, not text, be link on TOC, LOF and LOT
+  ,colorlinks=true    % Colors the text of links and anchors.
+  ,pdftitle={\myTitle}%
+  ,pdfauthor={\textcopyright\ \myName, \myUni}%
+  ,pdfsubject={}%
+  ,pdfkeywords={}%
+  ,pdfcreator={pdfLaTeX}%
+  ,pdfproducer={LaTeX with hyperref}%
+}%
+\hypersetup{%
+%%% PDF-specific display options
+  ,bookmarksopen=true     % If Acrobat bookmarks are requested, show them
+                          % with all the subtrees expanded.
+  ,bookmarksopenlevel=2   % level (\maxdimen) to which bookmarks are open
+  ,bookmarksnumbered=true %
+  ,bookmarkstype=toc      %
+%%% PDF display and information options
+  ,pdfpagemode=UseOutlines % Determines how the file is opening in Acrobat:
+                          %  UseNone, UseThumbs (show thumbnails),
+                          %  UseOutlines (show bookmarks), FullScreen,
+                          %  UseOC (PDF 1.5), and UseAttachments (PDF 1.6).
+                          %
+  ,pdfstartpage=1         % Determines on which page the PDF file is opened.
+  ,pdfstartview=FitV      % Set the startup page view
+  % options: (same for pdfview, pdfremotestartview)
+  %  Fit   Fits the page to the window.
+  %  FitH  Fits the width of the page to the window.
+  %  FitV  Fits the height of the page to the window.
+  %  FitB  Fits the page bounding box to the window.
+  %  FitBH Fits the width of the page bounding box to  the window.
+  %  FitBV Fits the height of the page bounding box to the window.
+  ,pdfremotestartview=Fit % Set the startup page view of remote PDF files
+  ,pdfcenterwindow=false  %
+  ,pdffitwindow=false     % resize document window to fit document size
+  ,pdfnewwindow=false     % make links that open another PDF file 
+                          % start a new window
+  % options:
+  %  SinglePage     Displays a single page; advancing flips the page
+  %  OneColumn      Displays the document in one column; continuous scrolling.
+  %  TwoColumnLeft  Displays the document in two columns, 
+  %                 odd-numbered pages to the left.
+  %  TwoColumnRight Displays the document in two columns, 
+  %                 odd-numbered pages to the right.
+  %  TwoPageLeft    Displays two pages, odd-numbered pages to the left 
+  %  TwoPageRight   Displays two pages, odd-numbered pages to the right 
+  %
+  ,pdfdisplaydoctitle=true  % display document title instead of file name 
+} % end: hypersetup
+
+
+% ********************************************************************
+% Setup autoreferences
+% ********************************************************************
+% There are some issues regarding autorefnames
+% http://www.ureader.de/msg/136221647.aspx
+% http://www.tex.ac.uk/cgi-bin/texfaq2html?label=latexwords
+% you have to redefine the makros for the 
+% language you use, e.g., american, ngerman
+% (as chosen when loading babel/AtBeginDocument)
+% ********************************************************************
+\makeatletter
+\@ifpackageloaded{babel}%
+    {%
+       \addto\extrasamerican{%
+					\renewcommand*{\figureautorefname}{Figure}%
+					\renewcommand*{\tableautorefname}{Table}%
+					\renewcommand*{\partautorefname}{Part}%
+					\renewcommand*{\chapterautorefname}{Chapter}%
+					\renewcommand*{\sectionautorefname}{Section}%
+					\renewcommand*{\subsectionautorefname}{Section}%
+					\renewcommand*{\subsubsectionautorefname}{Section}% 	
+				}%
+       \addto\extrasngerman{% 
+					\renewcommand*{\chapterautorefname}{Kapitel}%
+					\renewcommand*{\sectionautorefname}{Abschnitt}%
+					\renewcommand*{\subsectionautorefname}{Abschnitt}%
+					\renewcommand*{\subsubsectionautorefname}{Abschnitt}% 
+					\renewcommand*{\paragraphautorefname}{Absatz}%
+					\renewcommand*{\subparagraphautorefname}{Absatz}%
+					\renewcommand*{\footnoteautorefname}{Fu\"snote}%
+					\renewcommand*{\FancyVerbLineautorefname}{Zeile}%
+					\renewcommand*{\theoremautorefname}{Theorem}%
+					\renewcommand*{\appendixautorefname}{Anhang}%
+					\renewcommand*{\equationautorefname}{Gleichung}%        
+					\renewcommand*{\itemautorefname}{Punkt}%
+				}%	
+			% Fix to getting autorefs for subfigures right (thanks to Belinda Vogt for changing the definition)
+			\providecommand{\subfigureautorefname}{\figureautorefname}%  			
+    }{\relax}
+\makeatother
+

@@ -1,0 +1,27 @@
+% ****************************************************************************************************
+% 1. Personal data and user ad-hoc commands
+% ****************************************************************************************************
+\newcommand{\myTitle}{Persönliches Informationsportal \quote{Elastifeed}\\Backend\xspace}
+\newcommand{\myDegree}{Bachelor of Science (B.\,Sc.)\xspace}
+%\newcommand{\myDegree}{Master of Science (M.\,Sc.)\xspace}
+\newcommand{\myDegreeType}{Bachelor\xspace}
+%\newcommand{\myDegreeType}{Master\xspace}
+\newcommand{\myDegreeCourse}{Praktische Informatik}
+%\newcommand{\myDegreeCourse}{Kommunikationsinformatik}
+\newcommand{\myName}{Jannik Schäfer\\ Matthias Riegler\\ Jorge Crespo Sueiro\\ Mark Martinussen\xspace}
+\newcommand{\myUni}{Hochschule für Technik und Wirtschaft des Saarlandes\xspace}
+\newcommand{\myCompany}{}
+\newcommand{\myFirstProf}{Prof. Dr. Klaus Berberich}
+\newcommand{\mySecondProf}{}
+\newcommand{\myLocation}{Saarbrücken\xspace}
+\newcommand{\myTime}{\today\xspace}
+\newcommand{\currentVersion}{Version 2.1\xspace} % TODO: ggf. über git Versionsinformationen automatisch bereitstellen und verwenden
+
+% Eigene Shortcuts fuer laengere Befehle
+	\newcommand{\todox}[1]{\todo[inline, size=\small]{#1}}
+	%Nummerierte Anmerkungen
+	\newcounter{todocounter}
+	\renewcommand{\todox}[2][]{\stepcounter{todocounter}\todo[inline, size=\small,caption={\thetodocounter: #2}, #1]{\renewcommand{\baselinestretch}{0.5}\selectfont\thetodocounter: #2\par}}
+
+% Zitate
+\renewcommand{\quote}[1]{\glqq #1\grqq}

@@ -1,0 +1,279 @@
+% ****************************************************************************************************
+% Adujsted from original htwsaar-i-mst-config.tex:
+% **************************************************************************************************** 
+\RequirePackage[utf8]{inputenc}
+ \DeclareUnicodeCharacter{00A0}{~}
+\RequirePackage[T1]{fontenc}
+
+% ********************************************************************
+% Setting up the page and margins
+% ********************************************************************
+\usepackage{geometry}
+ \geometry{a4paper,left=25mm,right=35mm,top=25mm,bottom=30mm}
+
+
+% ********************************************************************
+% Packages with options that might require adjustments
+% ********************************************************************
+\PassOptionsToPackage{ngerman}{babel}   % change this to your language(s)
+ \RequirePackage{babel}					
+
+\PassOptionsToPackage{language=auto,style=numeric-comp,backend=biber,bibwarn=true,sorting=nty,texencoding=auto, bibencoding=auto}{biblatex}
+ \RequirePackage{biblatex}	
+
+% ********************************************************************
+% Base packages
+% ********************************************************************
+
+\usepackage{etoolbox}
+
+% A small choice in fonts
+% ********************************************************************
+\usepackage{lmodern}
+%\usepackage[tt=false]{libertine} % [osf]
+%\usepackage{luximono}
+%\usepackage{mathpazo}
+%\usepackage[urw-garamond]{mathdesign} <-- no osf support :-(
+% ********************************************************************
+
+% Description: support automatic translations
+% Doc: beameruserguide.pdf
+\usepackage{translator}
+
+% Description: Color support with color mixing modells
+% Doc: xcolor.pdf
+\usepackage[
+  dvipsnames, % Load a set of predefined colors 
+  table,      % Load the colortbl package
+  % fixpdftex,  % Load the pdfcolmk package (may be problematic)
+  hyperref,   % Support  the  hyperref  package
+  fixinclude, % Prevent dvips color reset before .eps file inclusion
+]{xcolor}
+
+% Description: Support for graphics in LaTeX
+% Doc: grfguide.pdf
+\usepackage[%
+  %final,
+  %draft % do not include images (faster)
+]{graphicx}
+
+\PassOptionsToPackage{printonlyused}{acronym}
+    \usepackage{acronym} % nice macros for handling all acronyms in the thesis
+
+\usepackage{ragged2e}
+
+% ********************************************************************
+% Bugfixes
+% ********************************************************************
+
+\usepackage{textcomp} % fix warning with missing font shapes
+%\AtEndPreamble\usepackage{scrhack} % fix warnings when using KOMA with listings package          
+\usepackage{xspace} % to get the spacing after macros right  
+\usepackage{mparhack} % get marginpar right
+
+% Description: Used to define commands that don't eat spaces.
+% Doc: xspace.pdf
+\RequirePackage{xspace}
+
+
+% Description: fixes for the default Computer Modern math fonts
+% Doc: fixmath.pdf
+\usepackage{fixmath}
+
+% ********************************************************************
+% Math packages
+% ********************************************************************
+\usepackage[
+   centertags, % (default) center tags vertically
+   %tbtags,    % 'Top-or-bottom tags': For a split equation, place equation
+               % numbers level with the last (resp. first) line, if numbers
+               % are on the right (resp. left).
+   sumlimits,  %(default) Place the subscripts and superscripts of summation
+               % symbols above and below
+   %nosumlimits, % Always place the subscripts and superscripts of
+                 % summation-type symbols to the side, even in displayed
+                 % equations.
+   intlimits,  % Like sumlimits, but for integral symbols.
+   %nointlimits, % (default) Opposite of intlimits.
+   namelimits, % (default) Like sumlimits, but for certain 'operator names'
+               % such as det, inf, lim, max, min, that traditionally have
+               % subscripts placed underneath when they occur in a displayed
+               % equation.
+   %nonamelimits, % Opposite of namelimits.
+   %leqno,     % Place equation numbers on the left.
+   %reqno,     % Place equation numbers on the right.
+   fleqn,      % Position equations at a fixed indent from the left margin
+               % rather than centered in the text column.
+]{amsmath} %
+
+\usepackage[fixamsmath,disallowspaces]{mathtools}
+
+%% Used to differtiate definitions from theorems etc.
+\usepackage{amsthm}
+
+% Description: strike out arguments in math mode
+% Doc: cancel.sty
+\usepackage{cancel}
+
+
+% ********************************************************************
+% Tables (tabulars)
+% ********************************************************************
+
+% Description: defines a single environment tabu to make all kinds of tabulars
+%              It is more flexible than tabular, tabular*, tabularx and array
+%              and extends the possibilities.
+% Doc: tabu.pdf
+\usepackage{tabu}
+\usepackage{booktabs}
+
+\usepackage{caption}
+    \captionsetup{format=hang,font=small}
+
+\usepackage{subfig}
+\usepackage{wrapfig}
+\usepackage{multirow}
+
+% ********************************************************************
+% Text decoration
+% ********************************************************************
+
+\usepackage[shadow]{todonotes} %Settings for ToDoNotes
+
+%%% bug fixing ===========================================
+% description: fixes bug in ellipsis (...) 
+% Doc: ellipsis.pdf
+% -> load after babel
+\usepackage[xspace]{ellipsis} 
+
+%%% Text-decoration ======================================
+%
+% Description: commands for underlining for emphasis
+% Provides: \ulin, \uuline, \sout, \xout, ...
+% Doc: ulem.pdf
+\usepackage[normalem]{ulem} 
+
+% Description: commands for for emphasis
+% Provides: \so, \ul, \st, ...
+% Doc: soulutf8.pdf (loads soul.sty)
+\usepackage{soulutf8}
+
+% Description: enable linebreaks for URLs
+% Provides: \url{}
+% Doc: url.pdf
+\usepackage{url}
+
+% Description: Advanced features for clever quotations
+% Doc: csquotes.pdf
+\usepackage[%
+   babel,            % the style of all quotation marks will be adapted
+                     % to the document language as chosen by 'babel'
+   german=quotes,    % Styles of quotes in each language
+   english=british,
+   french=guillemets
+]{csquotes}
+
+
+% ********************************************************************
+% Verbatim
+% ********************************************************************
+\usepackage{upquote} % print correct quotes in verbatim-environments
+\usepackage{verbatim} %
+
+\usepackage{listings}
+
+\usepackage{minted}
+
+% ********************************************************************
+% Misc
+% ********************************************************************
+\usepackage{blindtext}
+
+\usepackage[%
+%%% Lines
+   % headtopline,
+   % plainheadtopline,
+   % headsepline,
+   % plainheadsepline,
+   % footsepline,
+   % plainfootsepline,
+   % footbotline,
+   % plainfootbotline,
+   % ilines,
+   % clines,
+   % olines,
+% column titles (content, style)
+   automark,
+   % autooneside,% ignore optional argument in automark at oneside
+   komastyle,
+   % standardstyle,
+   % markuppercase,
+   % markusedcase,
+   nouppercase,
+]{scrpage2}
+
+% Description: apply different styles for the formating of the 
+%              table of contents and lists of floats.
+%%% Doc: tocstyle.pdf (Koma Script)
+%% Alpha package, uses koma fonts (\setkomafont{}{}) only if KOMAlike is selected
+%
+\usepackage[%
+%%% toc width calculation 
+  tocindentauto,     % all widths at the TOCs are calculated by tocindentauto
+%  tocindentmanual,  % opposite of auto
+%%% indentation of toc
+  tocgraduated,      % standard
+%  tocflat,          % no intendation, text aligned
+%  tocfullflat,      % no intendation, no alignment
+%%%  page breaking rules
+  tocbreaksstrict,   % sets a lot of penalties before and after TOC entries 
+                     % to avoid page break between a TOC entry and it's parent. 
+%  tocbreakscareless,% allow more page breaks.  
+%%%  indentation of unnumbered TOC entries
+% toctextentriesindented, % unnumbered TOC entrie are indented only as wide 
+%                         % as the number of numbered TOC entries of the same 
+%                         % level. 
+  toctextentriesleft,   % indented as if they have an empty number.
+]{tocstyle}
+
+\usepackage[
+%%% Extension options
+  ,backref=page       % Adds backlink text to the end of each item in the
+                      % bibliography, as a list of section numbers.
+                      % (section, slide, page, none)
+  ,pagebackref=false  % Adds backlink text to the end of each item in the
+                      % bibliography, as a list of page numbers.
+  ,hyperindex=true    % Makes the page numbers of index entries into
+                      % hyperlinks.
+  ,hyperfootnotes=false % Makes the footnote marks into hyperlinks to the
+                        % footnote text (must be false if footmisc is loaded).
+%%% PDF-specific display options
+  ,bookmarks=true
+%%% PDF display and information options  
+  ,pdfpagelabels=true % set PDF page labels
+]{hyperref}
+
+% ****************************************************************************************************
+% Last calls before the bar closes
+% ****************************************************************************************************
+% ********************************************************************
+% Development Stuff
+% ********************************************************************
+%\listfiles
+\PassOptionsToPackage{l2tabu,orthodox,abort}{nag}
+	\usepackage{nag}
+%\PassOptionsToPackage{warning, all}{onlyamsmath}
+%	\usepackage{onlyamsmath}
+
+
+% ****************************************************************************************************
+% Further adjustments (experimental)
+% ****************************************************************************************************
+%\usepackage{tocbibind} %Allows us to add Bibliography to ToC
+\usepackage{enumitem}
+\setdescription{font=\normalfont\bfseries} %Changes the appearance of description items
+\usepackage[activate={true,nocompatibility},final,tracking=true,kerning=true,spacing=true,factor=1100,stretch=10,shrink=10]{microtype}
+
+
+\setkomafont{disposition}{\bfseries}
+% *****************************************
