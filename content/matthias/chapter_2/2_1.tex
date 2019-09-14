@@ -1,0 +1,73 @@
+\section{Abhandeln von anfallenden Aufgaben - Processor}
+
+Der Processor ist ein in Python entwickeltes Programm das drei wesentliche Funktionen der Prozess-Struktur von Elastifeed bereitstellt:
+\begin{enumerate}
+        \item Abarbeiten von wartenden Scrape-Anfragen
+        \item Periodisches Abfragen von RSS Feeds
+        \item Hinzufügen einzelner Scrape-Anfragen zur Warteschlange
+\end{enumerate}
+Der Processor dient hierbei nur als Verteiler, der Anfragen an die vorher aufgeschlüsselten Services stellt und erhaltene Antworten weiter gibt.
+Um diesen Prozess so effizient wie möglich zu gestalten, wird das AsyncIO Framework in Python verwendet.
+Dieses wurde in Python 3.5 hinzugefügt (@TODO Quelle) und bietet eine auf \textttt{async/await} basierte Programmierschnittstelle für parallele Programmierung auf der Basis von Coroutinen.
+
+\subsection{Implementierung der Warteschlange}
+Besonders das generieren von Screenshot und PDF-Ansichten einer Webseite hat sich im Entwicklungsprozess als sehr rechenintensiv gestaltet.
+Um die Resourcennutzung zu optimieren bietet der Processor die Möglichkeit, nur so viele Anfragen an den Scraper zu senden, wie auch Tabs verfügbar sind.
+Bei Abfragen eines RSS Feeds fallen oft mehr Aufgaben an, als Tabs bei den Scrapern verfügbar sind.
+Lösung dieses Problem ist eine Warteschlange, die mit Redis (@TODO Quelle) realisiert wird.
+In dieser werden in einer doppelt verketteten Liste mit \texttt{RPUSH} Aufgaben gespeichert und mit \texttt{BLPOP} herausgenommen.
+Die \texttt{BLPOP} Funktion nimmt das erste Element aus der Liste heraus.
+Sollte kein Element in der Liste sein blockiert die Funktion so lange, bis sie ein Element entnehmen kann.
+Schematisch dargestellt ist der Prozess in (@TODO)
+\endsubsection
+
+\subsection{Abfragen von RSS Feeds}
+Die RSS Feeds werden zentral in der Datenbank des Collectors gespeichert und sind über eine REST-API verfügbar.
+Um nicht bei jedem aktualisieren der RSS-Feeds alle sich im Feed befindenden Dokumente zu indizieren, wird in Redis als Schlüssen-Wert-Paar der RSS Feed und der Zeitpunkt an dem er zuletzt abgefragt wurde gespeichert.
+Der Zeitpunkt des letzten Abfragens wird an die RSS Komponente von Elastifeed weiter gegeben sodass nur neue Elemente zurück geliefert werden.
+Anschließend werden die Elemente am Ende der Warteschlange hinzugefügt.
+Der Processor koordiniert diesen Prozess einem konfigurierbaren Zeitabstand.
+\begin{lstlisting}
+for feed in parsed:
+    # Get last parsed timestamp out of redis or assume it was scraped on 10.05.2019
+    last_time_raw = await redis.execute("get", f"feed:{feed['link']}") or b"2019-05-10T00:00:00.000000+00:00"
+    last_time = datetime.fromisoformat(last_time_raw.decode("UTF-8"))
+    for job in await rss.get(feed["link"], last_time):
+
+        # Add to queue
+        await redis.execute("RPUSH", "queue:items", dumps(QueueElement(
+            url=job.url,
+            title=job.title,
+            feed_url=feed["link"],
+            categories=[],
+            indexes=[f"user-{u['id']}" for u in feed["users"]]
+        )))
+
+    # Update timestamp
+    await redis.execute("set", f"feed:{feed['link']}", datetime.now(timezone.utc).astimezone().isoformat())
+\end{lstlisting}
+\endsubsection
+
+\subsection{Hinzufügen einzelner Elemente zur Warteschlange}
+Mit der Bibliothek \texttt{Sanic} wird eine REST-Schnittstelle zum Hinzufügen einzelner Elemente generiert.
+Die Schnittstelle wird oft direkt von Seiten des Collectors angefragt, wenn ein Nutzer diese Seite außerhalb eines RSS-Feeds zu seinem Index hinzufügen möchte.
+Um dem Nutzer die Daten dieser Seite so schnell wie möglich verfügbar zu machen, werden per API hinzugefügte Elemente an den Anfang der Warteschlange gesetzt und somit priorisiert.
+\begin{lstlisting}
+@app.route("/add", methods=["POST"])
+async def add_job(request):  # pylint: disable-msg=unused-variable
+    """ Adds a job to the task queue """
+    try:
+        await request.app.redis.execute("LPUSH", "queue:items", helper.dumps(
+            job.QueueElement(
+                url=request.json["url"],
+                title=request.json.get("title", None),
+                indexes=[ f"user-{u}" for u in request.json["indexes"]],
+                categories=request.json["categories"]
+            )
+        ))
+        return json({"status": "ok"})
+   ...
+\end{lstlisting}
+\endsubsection
+
+\endsection
