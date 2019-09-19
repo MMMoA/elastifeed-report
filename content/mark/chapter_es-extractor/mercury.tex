@@ -1,0 +1,73 @@
+% !TeX encoding=utf8
+% !TeX spellcheck = de-DE
+\section{Mercury Parser API}
+Wie wir in Abschnitt \ref{extractor:ansatz:subsec2} besprochen haben, können wir mithilfe des \ac{HTML DOM} und CSS Query Selectors zuverlässig den relevanten Text  eines Artikels bestimmen. Damit wir nicht Selektoren für alle Websites der Welt definieren müssen, verwenden wir eine Library, die uns viel Arbeit abnimmt. Der Mercury Web Parser von Postlight Labs LLC\cite{mercury_homepage} verwendet genau eine Menge von komplexen CSS Query Selectors und Eigenschaften des HTML DOM um für einen beliebigen Artikel den relevanten Text und mehr zu bestimmen. Der Mercury Parser kann mit nur einer URL oder zusätzlich dem schon heruntergeladenen HTML Dokument aufgerufen werden. In der Praxis verwenden rufen wir ihn nur mit der URL auf. Zusätzlich definieren wir den HTTP Header der Anfrage und mit welcher Formatierung (keine, HTML, Markdown) der relevante Text extrahiert werden soll.
+% @TODO Uncomment, for some reason putting minted inside a listing to include a caption causes bugs.
+%\begin{listing}[ht]
+%	\label{extractor:code:mercury}
+%	\caption{Beispielhafter Aufruf des Mercury Web Parsers}
+	\inputminted[
+		frame=lines, 
+		framesep=2mm, 
+		linenos, 
+		baselinestretch=1.2, 
+		fontsize=\footnotesize]{js}{code/mercury-example.js}
+%\end{listing}
+
+
+\begin{center}
+\textuparrow\textcolor{blue}{@TODO: Uncomment the listing!} \textuparrow
+\end{center}
+
+
+Das Ergebnis ist ein \ac{JSON} Objekt, die enthaltenen Felder sind in Tabelle \ref{extractor:table:mercury} aufgelistet. Falls der Parser den Wert für ein Feld nicht bestimmen kann, ist er \verb|null|.
+\begin{table}[t]
+	\centering
+	\begin{tabu}{lX}
+		\toprule
+		Feld & Beschreibung \\ \midrule
+		\texttt{title} & Titel oder Überschrift der Website. \\
+		\texttt{content} & (Formatierter) Text, welcher als relevant angesehen wird. Mögliche Formate sind HTML, Markdown oder keins. \\
+		\texttt{author} & Autor oder Editor der Seite / Artikels. \\
+		\texttt{date\_published} & Zeitpunkt zu dem die Website veröffentlicht wurde. \\
+		\texttt{lead\_image\_url} & URL des Vorschaubildes.  \\
+		\texttt{dek} & Abstrakte Zusammenfassung des Artikels, die unter dem Titel steht. \\
+		\texttt{excerpt} & Ein kleiner Ausschnitt des Artikels, oft die ersten paar Sätze oder identisch mit dem \texttt{dek}. \\
+		\texttt{total\_pages} & Anzahl der Seiten (HTML Dokumente) über die sich dieser Artikel erstreckt.\\
+		\texttt{next\_page\_url} & URL der nächsten Seite (HTML Dokument) des Artikels, falls der Artikel aus mehreren Seiten besteht. \\
+		\texttt{rendered\_pages} & Anzahl der Seite (HTML Dokumente), die betrachtet wurden. \\
+		\texttt{url} & URL der Website. \\
+		\texttt{domain} & Domain der Website. \\
+		\texttt{word\_count} & Anzahl der Wörter im relevanten Text auf der Seite. \\
+		\texttt{direction} & Vermutete Leserichtung des Artikels. Meistens \quote{ltr} oder \quote{rtl}. \\ \bottomrule
+		
+	\end{tabu}
+\caption{Rückgabewerte des Mercury Web Parsers}
+\label{extractor:table:mercury}
+\end{table}
+
+\subsection{Benutzerdefinierte Selektoren}
+Trotz der fortlaufenden Arbeit, die an dem Mercury Web Parser gemacht wird, haben wir feststellen müssen, dass er bei weitem nicht perfekt ist. Insbesondere, da er von einem englischsprachigen Team entwickelt wird, werden deutschsprachige Websites und Artikel oft nur unzureichend analysiert. Eine HTML Datei mit deutschen IDs und Klassen wie \verb|.mitte| oder \verb|#inhalt| ist für den Parser unverständlich. Glücklicherweise sind die Entwickler sich dieses Problems bewusst und bieten eine Lösung an. \\
+Es gibt die Möglichkeit, für eine Domain die unzureichend erkannt wird, benutzerdefinierte Selektoren anzulegen. Intern heißen diese \quote{Extraktoren}, wir werden diesen Begriff jedoch nicht verwenden, um Missverständnisse vorzubeugen. Bei diesen Selektoren handelt es sich ein \ac{JSON} Dokument, bei dem jedem Feld eine Menge von CSS Query Selectors zugeordnet wird. \cite{mercury_custom} Beispielsweise ein benutzerdefinierter Selektor für die deutsche News – Seite \url{www.golem.de}.
+
+\inputminted[
+frame=lines, 
+framesep=2mm, 
+linenos, 
+baselinestretch=1.1, 
+fontsize=\footnotesize]{js}{code/golemextractor.js}
+% @TODO Caption.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
