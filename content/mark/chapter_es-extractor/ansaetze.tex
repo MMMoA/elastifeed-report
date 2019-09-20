@@ -25,11 +25,13 @@ Aufgrund der zweiten Frage müssen wir leider feststellen, dass dieser Lösungsa
 \label{extractor:ansatz:subsec2}
 Statt zu versuchen auf ein komplexes Feature, welches nur von bestimmten Seiten angeboten wird, zuzugreifen haben wir einen Ansatz entwickelt, welcher lediglich die HTML Datei einer Website benötigt. Eine jede Website wird durch eine HTML Datei beschrieben, die man ganz einfach mit dem Link herunterladen kann.
 Diese Datei besitzt ein wohl definiertes Format. Die Idee dieses Ansatzes ist es nun, sich ebenjenes Format, und insbesondere die Meta – Informationen, die es enthält, zu nutzen zu machen, um den relevanten Text zu bestimmen. \\ \\ 
-Der Aufbau einer HTML Datei oder HTML Dokument, wird durch das \ac{HTML DOM} beschrieben: Ein Dokument besteht aus mehreren Elementen, wobei ein Element mit den spitzen Klammern \mintinline{html}{<name>} eingeleitet und mit \mintinline{html}{</name>} terminiert wird. Im Sinne des \ac{HTML DOM} sind diese Elemente Objekte. Das heißt, sie besitzen Eigenschaften (Attribute), Methoden und Ereignisse. \cite{w3c_html} Elemente die geschachtelt definiert sind, bilden eine Vererbungsbeziehung, wobei das oberste Objekt immer \verb|document| genannt wird. Ein HTML Dokument beschreibt einen Baum (Abbildung \ref{todo}), mit einem \verb|head| für Metainformationen und einem \verb|body| für den Inhalt. Dieser Inhalt kann dann weiter in Absätze, Überschriften, usw. unterteilt sein.  \begin{figure}[h]
-	
+Der Aufbau einer HTML Datei oder HTML Dokument, wird durch das \ac{HTML DOM} beschrieben: Ein Dokument besteht aus mehreren Elementen, wobei ein Element mit den spitzen Klammern \mintinline{html}{<name>} eingeleitet und mit \mintinline{html}{</name>} terminiert wird. Im Sinne des \ac{HTML DOM} sind diese Elemente Objekte. Das heißt, sie besitzen Eigenschaften (Attribute), Methoden und Ereignisse. \cite{w3c_html} Elemente die geschachtelt definiert sind, bilden eine Vererbungsbeziehung, wobei das oberste Objekt immer \verb|document| genannt wird. Ein HTML Dokument beschreibt einen Baum (Abbildung \ref{extractor:image:html}), mit einem \verb|head| für Metainformationen und einem \verb|body| für den Inhalt. Dieser Inhalt kann dann weiter in Absätze, Überschriften, usw. unterteilt sein.  
+\begin{wrapfigure}{r}{0.4\textwidth}
+	\centering
+	\includegraphics[scale=0.7]{images/html_overview.png}	
 	\caption{Struktur eines HTML Dokumentes}
 	\label{extractor:image:html}
-\end{figure}
+\end{wrapfigure}
 
 Nun können wir die Eigenschaften dieser Objekte auszunutzen. Beispielsweise gibt es das Attribut \mintinline{js}{document.body.textContent}, das allen angezeigten Text des Artikels enthält. Dieses beinhaltet jedoch auch den Text der Navigationselemente und Werbung. Folglich ist dieses Attribut alleine nicht ausreichend.
 

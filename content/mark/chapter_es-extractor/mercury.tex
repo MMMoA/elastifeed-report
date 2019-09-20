@@ -1,27 +1,23 @@
 % !TeX encoding=utf8
 % !TeX spellcheck = de-DE
-\section{Mercury Parser API}
+\section{Mercury Web Parser}
 Wie wir in Abschnitt \ref{extractor:ansatz:subsec2} besprochen haben, können wir mithilfe des \ac{HTML DOM} und CSS Query Selectors zuverlässig den relevanten Text  eines Artikels bestimmen. Damit wir nicht Selektoren für alle Websites der Welt definieren müssen, verwenden wir eine Library, die uns viel Arbeit abnimmt. Der Mercury Web Parser von Postlight Labs LLC\cite{mercury_homepage} verwendet genau eine Menge von komplexen CSS Query Selectors und Eigenschaften des HTML DOM um für einen beliebigen Artikel den relevanten Text und mehr zu bestimmen. Der Mercury Parser kann mit nur einer URL oder zusätzlich dem schon heruntergeladenen HTML Dokument aufgerufen werden. In der Praxis verwenden rufen wir ihn nur mit der URL auf. Zusätzlich definieren wir den HTTP Header der Anfrage und mit welcher Formatierung (keine, HTML, Markdown) der relevante Text extrahiert werden soll.
-% @TODO Uncomment, for some reason putting minted inside a listing to include a caption causes bugs.
-%\begin{listing}[ht]
-%	\label{extractor:code:mercury}
-%	\caption{Beispielhafter Aufruf des Mercury Web Parsers}
+
+\begin{listing}[ht]
+	\label{extractor:code:mercury}
 	\inputminted[
 		frame=lines, 
 		framesep=2mm, 
 		linenos, 
 		baselinestretch=1.2, 
 		fontsize=\footnotesize]{js}{code/mercury-example.js}
-%\end{listing}
-
-
-\begin{center}
-\textuparrow\textcolor{blue}{@TODO: Uncomment the listing!} \textuparrow
-\end{center}
+	\caption{Beispielhafter Aufruf des Mercury Web Parsers}
+\end{listing}
 
 
 Das Ergebnis ist ein \ac{JSON} Objekt, die enthaltenen Felder sind in Tabelle \ref{extractor:table:mercury} aufgelistet. Falls der Parser den Wert für ein Feld nicht bestimmen kann, ist er \verb|null|.
-\begin{table}[t]
+
+\begin{table}
 	\centering
 	\begin{tabu}{lX}
 		\toprule
@@ -45,18 +41,20 @@ Das Ergebnis ist ein \ac{JSON} Objekt, die enthaltenen Felder sind in Tabelle \r
 \caption{Rückgabewerte des Mercury Web Parsers}
 \label{extractor:table:mercury}
 \end{table}
+\begin{listing}
+	\inputminted[
+	frame=lines, 
+	framesep=2mm, 
+	linenos, 
+	baselinestretch=1.1, 
+	fontsize=\footnotesize]{js}{code/golemextractor.js}
+	\label{extractor:code:golemext}
+	\caption{Definition eines benutzerdefinierten Selektors}
+\end{listing}
 
 \subsection{Benutzerdefinierte Selektoren}
 Trotz der fortlaufenden Arbeit, die an dem Mercury Web Parser gemacht wird, haben wir feststellen müssen, dass er bei weitem nicht perfekt ist. Insbesondere, da er von einem englischsprachigen Team entwickelt wird, werden deutschsprachige Websites und Artikel oft nur unzureichend analysiert. Eine HTML Datei mit deutschen IDs und Klassen wie \verb|.mitte| oder \verb|#inhalt| ist für den Parser unverständlich. Glücklicherweise sind die Entwickler sich dieses Problems bewusst und bieten eine Lösung an. \\
 Es gibt die Möglichkeit, für eine Domain die unzureichend erkannt wird, benutzerdefinierte Selektoren anzulegen. Intern heißen diese \quote{Extraktoren}, wir werden diesen Begriff jedoch nicht verwenden, um Missverständnisse vorzubeugen. Bei diesen Selektoren handelt es sich ein \ac{JSON} Dokument, bei dem jedem Feld eine Menge von CSS Query Selectors zugeordnet wird. \cite{mercury_custom} Beispielsweise ein benutzerdefinierter Selektor für die deutsche News – Seite \url{www.golem.de}.
-
-\inputminted[
-frame=lines, 
-framesep=2mm, 
-linenos, 
-baselinestretch=1.1, 
-fontsize=\footnotesize]{js}{code/golemextractor.js}
-% @TODO Caption.
 
 
 
