@@ -1,0 +1,89 @@
+\section{Einzelne Komponenten vernetzen}
+
+Das Backendsystem von Elastifeed besteht aus mehreren einzelnen Komponenten, die erst im Zusammenschluss die gewünschte Funktionalität bereitstellen.
+Zentral findest sich Elasticsearch, eine auf Lucene basierte NoSQL Datenbank die über eine REST-Schnittstelle Funktionalität zum Einfügen und Suchen von Dokumenten bereitstellt.
+
+
+\subsection{Infrastrutur}
+FÜr die Projektarbeit standen insgesamt 3 virtuelle Maschinen mit je acht Gigabyte Arbeitsspeicher und vier CPU Kernen zur Verfügung.
+Um die VMs zu Provisionieren und zu Verwalten, nutzen wir Ansible.
+Initial wird für jeden Entwickler des Frontend- und Backend-Team ein Nutzer angelegt und ein zugehöriger SSH-Schlüssel automatisiert von Github hinzugefügt.
+\endsubsection
+
+\subsection{Elasticsearch}
+Die Elasticsearch-Datenbank kann als Cluster aufgesetzt werden, der vier unterschiedliche Anwendungsarten beinhalten kann:
+\begin{enumerate}
+        \item \textbf{data node}: Hier werden eigentliche Daten gespeichert und Operationen auf den Daten ausgeführt
+        \item \textbf{master node}: Zuständig für die Cluster Verwaltung
+        \item \textbf{clien node}: Leitet Anfragen an data oder master Nodes weiter
+        \item \textbf{Ingest node}: Transformieren von Dokumenten bevor sie zu einem Index hinzugefügt werden
+\end{enumerate}
+Die minimale Konfiguration eines "Cluster" ist dabei eine Master und eine Daten Instanz - beide Dienste können von einer Instanz abgebildet werden.
+Um die uns zur Verfügung stehenden Ressourcen so effektiv wie möglich zu nutzen, nutzen wir auf den 3 VMs je eine Elasticsearch-Instanz im Master und Daten Modus.
+Um ein Split Brain - zwei gegeneinandere operierende Master Nodes - zu vermeiden, ist der Cluster erst einsatzbereit sobald zwei oder mehr Nodes dem Cluster beigetreten sind.
+Die Installation von Elasticsearch wird wie auch die Provisionierung der VMs von Ansible übernommen und kann auf beliebig viele Instanzen im Cluster skaliert werden.
+
+Mit Kibana wird eine Web-Oberfläche für Elasticsearch angeboten, die wir insbesondere zum Debuggen häufig nutzen. Installiert wird diese erneut von Ansible.
+\endsubsection
+
+\subsection{Orchestrierung}
+Die einzelnen Komponenten von Elastifeed arbeiten überwiegend autark und ohne einen gespeicherten Zustand.
+Dieses Verhalten ermöglicht es uns, einzelne Komponenten individuell zu skalieren um die Performance zu verbessern.
+Um uns eine einfache Skalierung zu ermöglichen kommt eine Container-basierte Architektur zum Einsatz.
+
+\subbsubsection{Linux Container}
+Ein Linux Container besteht aus Prozessen, die über eine Kernel-Schnittstelle vom Rest des Systems abgeschottet sind. Ausgeliefert werden Container als lauffähiges Image, in dem alle notwendigen Abhängigkeiten für eine Anwendung bereits integriert sind.
+Alle Komponenten von Elastifeed sind als Container bereitgestellt.
+\endsubsubsection
+
+\subsubsection{Dockerfile}
+
+Um einzelne Komponenten in einem Container bereitzustellen, wird ein \texttt{Dockerfile} genutzt.
+In diesem ist ein Basis Image definiert und alle notwendigen Befehle um die Anwendung zu kompilieren.
+Bei in Golang implementierten Services gestaltet sich dies besonders einfach, da die Anwendung statisch kompiliert wird und in keiner Abhängigkeit von Systembibliotheken steht.
+Einer dieser Services ist das Push-Gateway zu Elasticsearch.
+Im ersten Schritt wird die Anwendung kompiliert - als Basis-Image dient hierbei das \texttt{golang} Image (https://hub.docker.com/\_/golang).
+
+\begin{lstlisting}
+
+FROM golang:1.12-alpine AS builder
+
+\end{lstlisting}
+
+Anschließend werden notwendige Abhängigkeiten installiert und die Anwendung kompiliert.
+
+\begin{lstlisting}
+RUN apk update && apk add --no-cache git
+ENV GO111MODULE=on
+
+WORKDIR $GOPATH/src/github.com/elastifeed/es-pusher
+
+# Copy source files
+COPY . .
+
+# Fetch deps dependencies
+RUN go get -d -v ./...
+
+# Build and Install executables
+RUN CGO_ENABLED=0 GOOS=linux go build ./cmd/entrypoint.go && mkdir -p /go/bin/ && mv entrypoint /go/bin/es-pusher
+\end{lstlisting}
+
+Nachdem die Anwendung erfolgreich kompiliert wurde, wird ein minimales Container Image erstellt, welches nur aus der Anwendung besteht.
+
+\begin{lstlisting}
+FROM scratch
+
+COPY --from=builder /go/bin/es-pusher /go/bin/es-pusher
+
+ENV API_BIND=":9090"
+
+ENTRYPOINT ["/go/bin/es-pusher", "-logtostderr=true"]
+
+EXPOSE 9090
+\end{lstlisting}
+
+Um Container nicht nach jeder Änderung manuell zu Aktualisieren, verwenden wir die Container-Registry quay.io, die im Zusammenspiel mit Github eine Continuous Delivery Plattform bietet und nach einchecken einer neuen Version in Github das Container-Image automatisiert neu baut. (@TODO Screenshot https://quay.io/repository/elastifeed/es-pusher?tab=builds)
+\endsubsubsection
+\endsubsection
+
+\endsection
