@@ -24,12 +24,17 @@ Bei Programmstart wird standardmäßig ein HTTP Server auf \verb|http://localhos
 }
 \end{minted}
 \subsection{Logging}
-Der es-extractor besitzt grundlegende Protokollierung, die zu \verb|stdout| geschrieben werden. Der Logger basiert auf dem \hyperref{https://www.npmjs.com/package/winston}{}{}{Winston Logger} für NPM, man kann ihm einen neuen \quote{Transport} hinzuzufügen, um dafür zu sorgen, dass die Protokolle von außen erreichbar sind. \\ 
-Die Ausgabe enthält immer zuerst das Log - Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht.
+Der es-extractor besitzt grundlegende Protokollierung, die zu \verb|stdout| geschrieben werden. Der Logger basiert auf dem Winston Logger für NPM, man kann ihm einen neuen \quote{Transport} hinzuzufügen, um dafür zu sorgen, dass die Protokolle von außen erreichbar sind. \cite{winston2019} \\ 
+Die Ausgabe auf \verb|stdout| enthält immer zuerst das Log - Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht.
 \subsection{Fehlermeldungen}
-Falls es während der Laufzeit zu einem Fehler kommt, wird dieser Fehler zuerst mit einem entsprechenden Level protokolliert. Eine Anfrage die einen Fehler erzeugt, bekommt grundsätzlich immer eine HTTP 1.1 Antwort mit einem Statuscode der ungleich 200 ist. In Fällen wo der Fehler beispielsweise durch eine inkorrete URL oder HTML Dokument erzeugt wird, wird zusätzlich ein JSON Dokument mit einer Nachricht zurückgeschickt.
-
-
+Falls es während der Laufzeit zu einem Fehler kommt, wird dieser Fehler zuerst mit einem entsprechenden Level protokolliert. Eine Anfrage die einen Fehler erzeugt, bekommt grundsätzlich immer eine HTTP 1.1 Antwort mit einem Statuscode der ungleich 200 ist. In Fällen wo der Fehler beispielsweise durch eine inkorrekte URL oder HTML Dokument erzeugt wird, antwortet der Server zusätzlich mit einem JSON Dokument, das einen Fehlercode und eine Nachricht enthält.
+\begin{minted}{json}
+{
+ "error"   : 1 , 
+ "message" : "deskriptive fehlermeldung"
+}
+\end{minted}
+Ein Client der die Dienste des es-extractor verwendet, sollte grundsätzlich überprüfen, ob ein die Antwort ein \verb|error| Feld enthält. Weiterhin ist eine Überprüfung der HTTP Status Codes sinnvoll.
 
 
 
