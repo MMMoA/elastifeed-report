@@ -12,6 +12,7 @@ Eine erfolgreiche Abarbeitung einer Anfrage resultiert in einer HTTP 1.1 Antwort
 		\texttt{markdown\_content} & Relevanter Text, der als Markdown \cite{markdown2016} formatiert ist. Dieses Feld sollte verwendet werden, um den Text anzuzeigen, da er die ursprüngliche Form des Artikels beibehält. Er kann auch Links zu Bildern enthalten, die heruntergeladen werden müssen. \\
 		\bottomrule
 	\end{tabu}
+
 \subsection{Schnittstellen}
 Bei Programmstart wird standardmäßig ein HTTP Server auf \verb|http://localhost/|, Port 8080 gestartet. Dieser stellt 2 Endpunkte zu Verfügung, die beide nur auf einen HTTP 1.1 POST Request mit \verb|Content-Type: application/json| reagieren. 
 \paragraph{/mercury/url} Dieser Endpunkt erwartet ein \ac{JSON} Objekt mit einem \quote{url} Feld. Die URL muss die URL der Website sein, von der der relevante Text bestimmt werden soll.
@@ -23,9 +24,14 @@ Bei Programmstart wird standardmäßig ein HTTP Server auf \verb|http://localhos
  "html" : "<html><head><title>Example<\title>..."
 }
 \end{minted}
+
 \subsection{Logging}
 Der es-extractor besitzt grundlegende Protokollierung, die zu \verb|stdout| geschrieben werden. Der Logger basiert auf dem Winston Logger für NPM, man kann ihm einen neuen \quote{Transport} hinzuzufügen, um dafür zu sorgen, dass die Protokolle von außen erreichbar sind. \cite{winston2019} \\ 
-Die Ausgabe auf \verb|stdout| enthält immer zuerst das Log - Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht.
+Die Ausgabe auf \verb|stdout| enthält immer zuerst das Log - Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht. \\
+Wenn eine Instanz des es-extractors im Kubernetes  – Cluster läuft, sind die Protokolle mit folgendem Kommando erreichbar, wobei \verb|xxxxxxxx-yyyyy| die ID des Pods ist, für den die Protokolle gewünscht sind. Alle existierenden Pods können mit \mintinline{bash}{kubectl get pods} bestimmt werden.
+\mint{bash}{kubectl logs es-extractor-deployment-xxxxxxxx-yyyyy}
+Zusätzlich kann man den Schalter \verb|-f| hinzufügen, um die Protokolle fortlaufend anzuzeigen.
+ 
 \subsection{Fehlermeldungen}
 Falls es während der Laufzeit zu einem Fehler kommt, wird dieser Fehler zuerst mit einem entsprechenden Level protokolliert. Eine Anfrage die einen Fehler erzeugt, bekommt grundsätzlich immer eine HTTP 1.1 Antwort mit einem Statuscode der ungleich 200 ist. In Fällen wo der Fehler beispielsweise durch eine inkorrekte URL oder HTML Dokument erzeugt wird, antwortet der Server zusätzlich mit einem JSON Dokument, das einen Fehlercode und eine Nachricht enthält.
 \begin{minted}{json}
@@ -36,8 +42,18 @@ Falls es während der Laufzeit zu einem Fehler kommt, wird dieser Fehler zuerst 
 \end{minted}
 Ein Client der die Dienste des es-extractor verwendet, sollte grundsätzlich überprüfen, ob ein die Antwort ein \verb|error| Feld enthält. Weiterhin ist eine Überprüfung der HTTP Status Codes sinnvoll.
 
-
-
+\section{Deployment}
+Um eine beliebige Menge von Instanzen des es-extractors in das Kubernetes Cluster anzuwenden, verwenden wir ein Deployment dem wir die gewünschte Zahl der Replikate, sowie das Docker Image mit dem Port auf dem der Server hört, übergeben. Zusätzlich erstellen wir einen Service, der die Kommunikation mit den anderen Teilen ermöglicht. Hier definieren wir eine Portweiterleitung von Port 80 auf den Port des Servers. Wir empfehlen die Zahl der Instanzen so zu wählen, dass sie nicht kleiner als $\frac{n}{2}$ ist, mit $n$ als Summe der Tabs in allen Instanzen des es-scraper.
+\begin{listing}[t]
+	\inputminted[
+	frame=lines, 
+	framesep=2mm, 
+	linenos, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize]{yaml}{code/es-extractor-deployment.yaml}
+	\caption{Kubernetes Deployment für es-extractor}
+	\label{extractor:code:es-extractor-deployment}
+\end{listing}
 
 
 
