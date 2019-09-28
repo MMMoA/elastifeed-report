@@ -19,7 +19,6 @@ In dieser werden in einer doppelt verketteten Liste mit \texttt{RPUSH} Aufgaben 
 Die \texttt{BLPOP} Funktion nimmt das erste Element aus der Liste heraus.
 Sollte kein Element in der Liste sein blockiert die Funktion so lange, bis sie ein Element entnehmen kann.
 Schematisch dargestellt ist der Prozess in (@TODO)
-\endsubsection
 
 \subsection{Abfragen von RSS Feeds}
 Die RSS Feeds werden zentral in der Datenbank des Collectors gespeichert und sind über eine REST-API verfügbar.
@@ -46,7 +45,6 @@ for feed in parsed:
     # Update timestamp
     await redis.execute("set", f"feed:{feed['link']}", datetime.now(timezone.utc).astimezone().isoformat())
 \end{lstlisting}
-\endsubsection
 
 \subsection{Hinzufügen einzelner Elemente zur Warteschlange}
 Mit der Bibliothek \texttt{Sanic} wird eine REST-Schnittstelle zum Hinzufügen einzelner Elemente generiert.
@@ -68,6 +66,3 @@ async def add_job(request):  # pylint: disable-msg=unused-variable
         return json({"status": "ok"})
    ...
 \end{lstlisting}
-\endsubsection
-
-\endsection
