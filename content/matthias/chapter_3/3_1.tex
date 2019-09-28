@@ -30,10 +30,12 @@ Mit Kibana wird eine Web-Oberfläche für Elasticsearch angeboten, die wir insbe
 Die einzelnen Komponenten von Elastifeed arbeiten überwiegend autark und ohne einen gespeicherten Zustand.
 Dieses Verhalten ermöglicht es uns, einzelne Komponenten individuell zu skalieren um die Performance zu verbessern.
 Um uns eine einfache Skalierung zu ermöglichen kommt eine Container-basierte Architektur zum Einsatz.
+Weitere Details finden sich im Abschnitt "Elastifeed in Kubernetes".
 
 \subbsubsection{Linux Container}
 Ein Linux Container besteht aus Prozessen, die über eine Kernel-Schnittstelle vom Rest des Systems abgeschottet sind. Ausgeliefert werden Container als lauffähiges Image, in dem alle notwendigen Abhängigkeiten für eine Anwendung bereits integriert sind.
 Alle Komponenten von Elastifeed sind als Container bereitgestellt.
+
 \endsubsubsection
 
 \subsubsection{Dockerfile}
@@ -83,7 +85,193 @@ EXPOSE 9090
 \end{lstlisting}
 
 Um Container nicht nach jeder Änderung manuell zu Aktualisieren, verwenden wir die Container-Registry quay.io, die im Zusammenspiel mit Github eine Continuous Delivery Plattform bietet und nach einchecken einer neuen Version in Github das Container-Image automatisiert neu baut. (@TODO Screenshot https://quay.io/repository/elastifeed/es-pusher?tab=builds)
+
 \endsubsubsection
+\endsubsection
+
+\subsection{Einführung in Kubernetes Kubernetes}
+
+Ein \textit{Kubernetes Cluster} \cite{k8s} ermöglicht die automatisierte Bereitstellung von Containern für etwa eine Microservice-Architektur.
+K8s besteht aus zwei Komponenten, die im Cluster mindestens einmal vorkommen: \textit{Controller} und \textit{Kubelet}, die auf physischen oder virtuellen Servern installiert werden.
+Die Kubelet's verwalten Container auf einem Server und werden von der Controller Komponente angesteuert.
+Server auf denen von Kubelet Container verwaltet, werden als \textit{Compute Node} bezeichnet.
+Der Controller nimmt über eine HTTP-basierte Schnittstelle Konfigurationen entgegen und verteilt Container entsprechend der Konfiguration auf den Compute Nodes.
+Die Konfiguration erfolgt über YAML-Dateien, die mit dem Kommandozeilen-Programm \texttt{kubectl} an einen Controller übermittelt werden.
+
+\subsubsection{Pod}
+Die kleinste Einheit bei K8s bildet der \textit{Pod}.
+Er kann einen oder mehrere Container sowie Daten enthalten.
+Pods können erstellt werden, werden aber nicht von Kubernetes überwacht.
+Sollte ein Pod nicht verfügbar sein, unternimmt Kubernetes keine weiteren Aktionen.
+
+\subsubsection{Deployment}
+Um die Verfügbarkeit eines Pod zu Garantieren, kann ein \textit{Deloyment} verwendet werden.
+Dieses beschreibt, wie der zu erzeugende Pod aussehen soll und wie viele Replikate davon existieren sollen.
+Der Controller von K8s verteilt die zu erzeugenden Pods auf die Compute Nodes.
+Wenn jetzt ein Pod abstürzt oder der Server auf dem der Pod ausgeführt wird abstürzt, erkennt der Controller den Ausfall und initiiert die Bereitstellung eines Ersatz.
+
+\subsubsection{StatefulSet}
+Pods und Deployments sind stateless und können keine Daten speichern, die nach Neustart oder Löschen eines Pods weiter existieren.
+Um auch Komponenten die Daten speichern müssen in Kubernetes zu betreiben existiert das \textit{StatefulSet}.
+Dies ist genauso aufgebaut wie ein Deployment, kann aber zusätzlich Speicher bereitstellen.
+Wenn ein Pod ausfällt, wird ein Neuer erzeugt, der auf den gleichen persistenten Speicherbereich wie der alte Zugreifen kann.
+Beispielsweise Datenbanken die in einem Kubernetes Cluster laufen, müssen auf ein StatefulSet zugreifen.
+
+\subsubsection{Service}
+Innerhalb des Clusters kann auf die einzelnen Pods zugegriffen werden.
+Um einzelne Komponenten einer Microservice Architektur zusammenzufassen und die Skalierbarkeit zu gewährleisten bietet Kubernetes einen \textit{Service} an.
+Dieser ist innerhalb des Clusters erreichbar und verteilt eingehende Anfragen auf alle Pods die dem Service zugeordnet sind.
+
+\subsubsection{Ingress}
+Um von außen über HTTP auf Komponenten innerhalb des Clusters zugreifen zu können, kann ein \textit{Ingress} genutzt werden.
+Dieser leitet eingehende Anfragen die auf ein definiertes Muster passen an einen Kubernetes Service weiter.
+\endsubsection
+
+
+
+\subsection{Elastifeed in Kubernetes}
+
+Alle Komponenten des Elastifeed-Backends werden als Container ausgeliefert, welche in einem Kubernetes Cluster ausgeführt werden.
+Für unsere Testzwecke verwenden wir die minimale Kubernetes Distribution k3s \cite{k3s}.
+Neben der Master Instanz, die zeitgleich auch als Worker agiert, fügen sich die verbleibenden VMs als Worker Nodes in den Cluster ein.
+
+\subsubsection{Skalieren der Komponenten}
+
+Jeder Microservice ist in einem Kubernetes Deployment als YAML beschrieben:
+\begin{lstlisting}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: elastifeed
+  name: es-scraper-deployment
+  labels:
+    app: es-scraper
+\end{lstlisting}
+Der erste Tag \textttt{apiVersion: apps/v1} gibt an, welcher Endpunkt der Kubernetes API angesprochen werden soll, \textttt{kind} dass wir ein \textttt{Deployment} Objekt erstellen möchten.
+Im folgenden \textttt{metadata} Abschnitt werden Attribute wie der Name des Objekts und seine Label gesetzt, die später zum einfachen Selektieren des Objekt oder einer Gruppe von Objekten helfen.
+
+\begin{lstlisting}
+spec:
+  replicas: 10 # Number of concurrent running instances
+  selector:
+    matchLabels:
+      app: es-scraper
+\end{lstlisting}
+
+Im nächsten Schritt geben wir an, wie viele Instanzen des im folgenden definierten Pod laufen sollen und nach welchem Selektierungskriterium die Pods des Deployment identifiziert werden sollen.
+
+\begin{lstlisting}
+  template:
+    metadata:
+      labels:
+        app: es-scraper
+    spec:
+      containers:
+      - name: es-scraper
+        image: quay.io/elastifeed/es-scraper:latest
+        env:
+        - name: S3_ENDPOINT
+          value: http://es-s3.rocketlan.de/
+        - name: S3_BUCKET_NAME
+          value: elastifeed
+        - name: API_BIND
+          value: ":8000"
+        - name: MERCURY_URL
+          value: "http://es-extractor-service/mercury/url"
+        envFrom:
+        - secretRef:
+          name: s3-credentials
+        ports:
+        - containerPort: 8000 # Exposed port
+      - name: browserless
+        image: browserless/chrome:latest
+        env:
+        - name: CONNECTION_TIMEOUT # Never timeout a connection.
+          value: "-1"
+\end{lstlisting}
+
+Der Pod des Scraper besteht aus zwei Containern - unser Microservice benötigt noch einen Chrome-Browser der im Headless Modus läuft.
+Beide Container laufen unter der selben IP Adresse und können über das Loopback-Interface miteinander Kommunizieren.
+Umgebungsvariablen die wir für die Konfiguration des Scraper benötigen werden unter dem \textttt{env} Tag als Liste beschrieben.
+
+\endsubsubsection
+
+\subsubsection{Loadbalancing zwischen den laufenden Instanzen}
+Das obige \textttt{Deployment} started die Pods, macht diese jedoch nicht verfügbar.
+Es ist möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP Adresse anzusprechen, die sich aber ändern, sobald das Deployment aktualisiert wird.
+Um einen zentralen Eingangspunkt für Anfragen bereitzustellen, benutzen wir ein \textttt{Service} Objekt.
+Hier selektieren wir alle Pods des \textttt{Deployment} über die vorher gesetzten Label.
+Der Service ist über seinen Namen im DNS oder eine einzelne, sich nicht ändernde IP Adresse erreichbar und leitet Anfragen an die dahinterliegenden Pods weiter.
+\begin{lstlisting}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: elastifeed
+  name: es-scraper-service
+spec:
+  selector:
+    app: es-scraper
+  ports:
+    - protocol: TCP
+      port: 80 # We map everything to port 80 so we can omit the port in our code
+      targetPort: 8000
+\end{lstlisting}
+\endsubsubsection
+
+\subsubsection{Speicherverwaltung}
+Zum Speichern von gerenderten Bildern und PDFs verwenden wir das S3 Protokoll.
+Eine Open-Source Implementation bietet das verteilte Dateisystem Ceph (@TODO cite), welches über Rook (@TODO cite) in einem Kubernetes Cluster deployt werden kann.
+Nachdem Rook unseren Ceph-Cluster initialisiert hat, können wir mit einem Kubernetes Objet einen Objektspeicher für Elastifeed erstellen:
+\begin{lstlisting}
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: s3-store
+  namespace: rook-ceph
+spec:
+  metadataPool:
+    failureDomain: host
+    replicated:
+      size: 2
+  dataPool:
+    failureDomain: host
+    erasureCoded:
+      dataChunks: 2
+      codingChunks: 1
+  gateway:
+    type: s3
+    sslCertificateRef:
+    port: 80
+    securePort:
+    instances: 1
+    allNodes: false
+\end{lstlisting}
+Diesen müssen wir im Anschluss noch von außen erreichbar machen:
+\begin{lstlisting}
+apiVersion: v1
+kind: Service
+metadata:
+  name: rook-ceph-rgw-s3-store-external
+  namespace: rook-ceph
+  labels:
+    app: rook-ceph-rgw
+    rook_cluster: rook-ceph
+    rook_object_store: s3-store
+spec:
+  ports:
+  - name: rgw
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: rook-ceph-rgw
+    rook_cluster: rook-ceph
+    rook_object_store: es-store
+  sessionAffinity: None
+  type: NodePort
+\end{lstlisting}
+\endsubsubsection
+
 \endsubsection
 
 \endsection
