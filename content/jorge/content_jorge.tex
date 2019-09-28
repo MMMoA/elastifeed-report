@@ -1,0 +1,198 @@
+\lstdefinestyle{jorge-python}{
+  frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\chapter{RssFeed}
+\chapterauthor{Jorge Crespo Sueiro}
+\section{Introduction}
+In order to have a simpler representation of the info that a webpage has, there is a resource available called RSS or Really Simple Syndication, it's main use is to distribute updated info to subscribed users (of that page).
+
+In our case, the idea is to have a simpler version in our system and keep it updated with news, this module has the responsability of retreiving those feeds by petition and checking if the info is new or not.
+
+\section{Solution}
+\paragraph{} 
+To do this job, I chosed Python over other programming languages mainly because of past experience working with this language, plenty of libraries to choose from and the readibility of the final code.
+\paragraph{}
+Python counts with a library that allows the deployment of a service very fast, called Flask. Even if it's not recomended to be used in production, it deals very well with reasonable amounts of traffic, wich is why in this case it can stay.
+Along with it, the "feedParser" library was made with the unique objective of retreiving any kind of data done with this paradigm in mind, RSS or Atom.
+
+Having this 2 tools and the concept clear, the first prototype was done, with it and some additional research 2 more versions were made:
+\subsection{Version 2}
+This is the currently implemented version, is the first prototype but upgraded to handle better exceptions and to log every request that was made and every answer retreived, it stills runs in Flask but has an improved error handling so it's ready to work. The code below is this version.
+
+\subsection{Version 3}
+This is the alternative code containing the additional software, the reasons behind the making of this version are several, all coming from the same initial research.
+
+\paragraph{}
+As the first version had a lack of proper error handling, the unique sign of failure was that several HTTP request were being missed.
+I didn't find any logical reason for that so I thought it was low performance. Trying to find a way to improve the speed of this module, I found a paper blaming Python GIL (Global Interpreter Lock) that basically mess the way Python treats resources used by different threads, it lacks proper resource management and creating new threads it's a very demanding task.
+
+\paragraph{}This reading didn't said much to me related to my program as the GIL lack of performance affects mainly programs using diffferent cores at same time but made me wonder how to use several threads in an optimal way.
+
+The solution I found had exactly the focus of managing several HTTP requests at same time, it consist of:
+\paragraph{gunicorn}
+A HTTP server implementing the pre-fork worker model, premade threads waiting and a controller that assign task to them, without killing each thread at the end of each work and reutilizing the pre-existing threads, the performance increases quite a bunch.
+\paragraph{nginx}
+Another server that can be used as a reverse Proxy, using it to buffer both request sending and receiving, allows gunicorn to work asyncronously from the interaction with the network. This is like this because the HTTP enviroment is lock from the moment the request is received to the moment it has being answered, if the network is slow, this time increases and the thread can't work in anything else.
+Having a reverse proxy buffering means that the worker threads will always be occupied with the business logic and leaving the work of receiving/sending to nginx.
+
+\paragraph{}
+Having this 2 tools, the efficiency of any HTTP server increases a lot compared with only using one thread running in flask. This version has not been implemented because to this project, version 2 works fine enough and because the lack of knowledge to make everything runnable as a whole(without having to first install gunicorn, then nginx, configure both etc...).
+
+\section{Code}
+\begin{lstlisting}[style=jorge-python]
+import feedparser
+import json
+import logging
+import traceback
+from datetime import datetime
+from flask import Flask, request, jsonify
+
+history = []
+responses = []
+
+HEADERS = {'Content-Type': 'application/json'}
+
+
+app = Flask(__name__)  # Declaring aplication
+
+@app.route('/parse/history', methods=['GET'])
+def rssParserHistory():
+    return jsonify(history)
+
+@app.route('/parse/responses', methods=['GET'])
+def rssParserResponses():
+    return jsonify(responses)
+
+
+# port is 8050
+@app.route('/parse', methods=['POST'])
+def rssParser():
+
+    #Extract URL, DATE, HEADING, FEEDCHANNEL"title"
+    # Here will go the url coming from the JSON request
+
+
+    url = request.json.get('url', 0)
+    # HERE DATE
+    storedTimestamp = request.json.get('from_time', 0)
+
+
+    print("timestamp in request: {}".format(storedTimestamp))
+    history.append(url)
+    print("url " + url)
+    if (url != 0 and storedTimestamp != 0):
+        pfeed = feedparser.parse(url)
+        print(pfeed)
+
+
+    #DATA IN CHANNEL
+        if 'title' in pfeed.feed:
+            channelTitle = pfeed.feed.get('title', 'no title')
+            print("title " + channelTitle)
+        if 'link' in pfeed.feed:
+            channelLink = pfeed.feed.get('link', 'no link')
+            print("link " + channelLink)
+        if 'description' in pfeed.feed:
+            channelDescription = pfeed.feed.get('description', 'no description')
+            print("Description " + channelDescription)
+        if 'updated' in pfeed.feed:
+            channelPublished = pfeed.feed.get('updated', 'no date')
+            print("Published " + channelPublished)
+
+        entries = pfeed.entries
+
+
+
+    #HERE HEADING
+        #HAHA JOKES, we don't do that over here
+
+    #HERE FEEDCHANNEL"title"
+
+
+        data = None
+        print("DEBUG: start to catch info")
+        try:
+            payload = {}
+            try:
+                payload['title'] = channelTitle
+            except Exception:
+                payload['title'] = 'none'
+            try:
+                payload['description'] = channelDescription
+            except Exception:
+                payload['description'] = 'none'
+            try:
+                payload['url'] = channelLink
+            except Exception:
+                payload['url'] = 'none'
+            try:
+                payload['published'] = channelPublished
+            except Exception:
+                payload['published'] = 'none'
+            n = 0
+            print ("DEBUG: Start to catch subEntries")
+            for entry in entries:
+
+
+                formattedTime = datetime.fromisoformat(entry.updated)
+                updatedStamp = datetime.timestamp(formattedTime)
+
+                if (updatedStamp > storedTimestamp):
+                    oneEntry = {}
+                    try:
+                        oneEntry['entryId'] = entry.id
+                    except Exception:
+                        oneEntry['entryId'] = 'no id'
+                    try:
+                        oneEntry['entryTitle'] = entry.title
+                    except Exception:
+                        oneEntry['entryTitle'] = 'no entryTitle'
+                    try:
+                        oneEntry['entryDescription'] = entry.description
+                    except Exception:
+                        oneEntry['entryDescription'] = 'no entryDescription'
+                    try:
+                        oneEntry['url'] = entry.link
+                    except Exception:
+                        oneEntry['url'] = 'no entryLink'
+                    try:
+                        oneEntry['entryPublished'] = entry.updated
+                    except Exception:
+                        oneEntry['entryPublished'] = 'no entryDate'
+                    payload['entry' + str(n)] = oneEntry
+
+                    n = n + 1
+
+            print("building response")
+            responses.append(payload)
+            #response = requests.request('POST', url, data=json.dumps(payload), headers=HEADERS)
+            print ("RESPONSE SENT")
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            logging.error(str(e))
+
+        print(payload)
+        print("DEBUG End of building")
+        return json.dumps(payload)
+    print("RETURNING 404")
+    return 'not found'
+
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0', debug=True, port=8050)
+\end{lstlisting}
