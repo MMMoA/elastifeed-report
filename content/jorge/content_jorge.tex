@@ -1,21 +1,5 @@
-\documentclass{article}
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{listings}
-\usepackage{color}
-
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{\includegraphics[scale =0.3]{htw-saar-logo-642}}
-\lhead{Pick and Place}
-\rfoot{Page \thepage}
-
-\definecolor{dkgreen}{rgb}{0,0.6,0}
-\definecolor{gray}{rgb}{0.5,0.5,0.5}
-\definecolor{mauve}{rgb}{0.58,0,0.82}
-
-\lstset{frame=tb,
+\lstdefinestyle{jorge-python}{
+  frame=tb,
   language=Python,
   aboveskip=3mm,
   belowskip=3mm,
@@ -32,18 +16,9 @@
   tabsize=3
 }
 
-\graphicspath{ {./} }
-\title{RssFeed}
-\begin{document}
-
-\author{Jorge Crespo Sueiro}
-\maketitle
-\tableofcontents
-\newpage
-
+\chapter{RssFeed}
+\chapterauthor{Jorge Crespo Sueiro}
 \section{Introduction}
-\paragraph{}
-\paragraph{}
 In order to have a simpler representation of the info that a webpage has, there is a resource available called RSS or Really Simple Syndication, it's main use is to distribute updated info to subscribed users (of that page).
 
 In our case, the idea is to have a simpler version in our system and keep it updated with news, this module has the responsability of retreiving those feeds by petition and checking if the info is new or not.
@@ -78,8 +53,8 @@ Having a reverse proxy buffering means that the worker threads will always be oc
 \paragraph{}
 Having this 2 tools, the efficiency of any HTTP server increases a lot compared with only using one thread running in flask. This version has not been implemented because to this project, version 2 works fine enough and because the lack of knowledge to make everything runnable as a whole(without having to first install gunicorn, then nginx, configure both etc...).
 
-\section{code}
-\begin{lstlisting}
+\section{Code}
+\begin{lstlisting}[style=jorge-python]
 import feedparser
 import json
 import logging
@@ -221,7 +196,3 @@ def rssParser():
 if __name__=='__main__':
     app.run(host='0.0.0.0', debug=True, port=8050)
 \end{lstlisting}
-
-
-
-\end{document}
