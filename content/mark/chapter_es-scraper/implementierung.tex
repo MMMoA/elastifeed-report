@@ -116,7 +116,8 @@ Der es-scraper besitzt umfangreiche Protokollierung die einem Administrator erla
 Wenn eine Instanz des es-scrapers im Kubernetes – Cluster läuft, sind die Protokolle
 mit folgendem Kommando erreichbar, wobei xxxxxxxx-yyyyy die ID des Pods ist, für den
 die Protokolle gewünscht sind. Alle existierenden Pods können mit \mintinline{bash}{kubectl get pods}
-bestimmt werden.\mint{bash}{kubectl logs es-scraper-deployment-xxxxxxxx-yyyyy es-scraper}
+bestimmt werden.
+\mint{bash}{kubectl logs es-scraper-deployment-xxxxxxxx-yyyyy es-scraper}
 Zusätzlich kann man den Schalter \verb|-f| hinzufügen, um die Protokolle fortlaufend anzuzeigen.
 
 \subsection{Fehlermeldungen}

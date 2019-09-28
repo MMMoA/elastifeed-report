@@ -28,6 +28,6 @@ Um eine beliebige Menge von Instanzen des es-scraper in das Kubernetes Cluster a
 	\label{scraper:code:es-scraper-deployment}
 \end{listing}
 \subsection*{Browserless}
-Um Probleme mit verschiedene Versionen von Google Chrome zu vermeiden verwenden wir zusätzlich das Docker Image browserless/chrome \cite{https://www.browserless.io/}. Dies ist ein wohlgetester Browser der immer gleich funktioniert. Jede Instanz des es-scraper hat so ihren eigenen Browser zu dem sie sich verbinden kann. Mit dem Kommando 
+Um Probleme mit verschiedene Versionen von Google Chrome zu vermeiden verwenden wir zusätzlich das Docker Image browserless/chrome \cite{browserless}. Dies ist ein wohlgetester Browser der immer gleich funktioniert. Jede Instanz des es-scraper hat so ihren eigenen Browser, zu dem sie sich verbinden kann. Mit dem Kommando 
 \mint{bash}{kubectl logs es-scraper-deployment-xxxxxxxx-yyyyy browserless}
-kann der Log dieses Browsers eingesehen werden. Manchmal stürzen diese Browser ab, und müssen manuell neu gestartet werden. Weiterhin kann man zusätzlich von diesem Image den Port 3000 weiterleiten um auf ein Debugging Interface zuzugreifen.
+kann der Log dieses Browsers eingesehen werden. Manchmal stürzen diese Browser ab und müssen manuell neu gestartet werden. Weiterhin kann man zusätzlich von diesem Image den Port weiterleiten, um auf ein Debugging Interface zuzugreifen.

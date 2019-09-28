@@ -27,7 +27,7 @@ Bei Programmstart wird standardmäßig ein HTTP Server auf \verb|http://localhos
 
 \subsection{Logging}
 Der es-extractor besitzt grundlegende Protokollierung, die zu \verb|stdout| geschrieben werden. Der Logger basiert auf dem Winston Logger für NPM, man kann ihm einen neuen \quote{Transport} hinzuzufügen, um dafür zu sorgen, dass die Protokolle von außen erreichbar sind. \cite{winston2019} \\ 
-Die Ausgabe auf \verb|stdout| enthält immer zuerst das Log - Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht. \\
+Die Ausgabe auf \verb|stdout| enthält immer zuerst das Log – Level (info, warn, error), den Tag und die Uhrzeit. Eine Ausgabe, die durch eine Anfrage an den Server erzeugt wurde, beinhaltet zusätzlich eine ID, die diese Anfrage eindeutig identifiziert. Schlussendlich kommt die Nachricht. \\
 Wenn eine Instanz des es-extractors im Kubernetes  – Cluster läuft, sind die Protokolle mit folgendem Kommando erreichbar, wobei \verb|xxxxxxxx-yyyyy| die ID des Pods ist, für den die Protokolle gewünscht sind. Alle existierenden Pods können mit \mintinline{bash}{kubectl get pods} bestimmt werden.
 \mint{bash}{kubectl logs es-extractor-deployment-xxxxxxxx-yyyyy}
 Zusätzlich kann man den Schalter \verb|-f| hinzufügen, um die Protokolle fortlaufend anzuzeigen.
