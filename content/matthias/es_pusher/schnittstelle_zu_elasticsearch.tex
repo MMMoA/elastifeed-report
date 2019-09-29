@@ -1,10 +1,10 @@
 \section{Schnittstelle zu Elasticsearch - Pusher}
-Der Pusher Service stellt bildet die Schnittstelle des Backend zur Datenbank.
+Der Pusher Service bildet die Schnittstelle des Backend zur Datenbank.
 Als Programmiersprache wurde Golang \cite{go} eingesetzt, mit dessen Standartbibliothek eine REST-API als Schnittstelle für interne Anwendungen bereitgestellt wird.
 Die Anbindung der Datenbank wird über die offizielle Bibliothek \texttt{go-elasticsearch}\cite{goes} übernommen.
 Um Nutzer möglichts effektiv voneinander zu trennen, wird je ein Index pro Nutzer verwendet.
 Es besteht die möglichkeit über die REST-API ein oder mehrere Dokumente in dem Index von einem oder mehreren Nutzer zus speichern.
-Um die Zusammenarbeit mit dem Frontend-Team zu ermöglichen haben wir gemeinsam ein Dokumenten-Format entwickelt, das eindeutig in einem Struct definiert ist:
+Um die Zusammenarbeit mit dem Frontend-Team zu ermöglichen haben wir gemeinsam ein Dokumenten-Format entwickelt, das eindeutig in einem \texttt{Struct} definiert ist:
 \begin{minted}{go}
 // Document contains the schema of a data entry which is stored in Elasticsearch
 type Document struct {
@@ -24,8 +24,8 @@ type Document struct {
   ReadLater       bool      `json:"read_later"`
 }
 \end{minted}
-Während der Entwicklugn hat sich herausgestellt, dass Webseiten oftmals von mehreren RSS Feeds referenziert werden und sich entsprechend mehrfach in den Dokumenten eines Nutzers.
-Um diesem Problem entgegen zu Wirken wird aus dem Titel und dem Inhalt einer Webseite ein Hash gebildet, woraus die eindeutige ID in ElasticSearch gebildet wird:
+Während der Entwicklung haben wir erkannt, dass Webseiten oftmals von mehreren RSS Feeds referenziert werden und sich entsprechend mehrfach im Index eines Nutzers.
+Um diesem Problem entgegen zu Wirken, wird aus dem Titel und dem Inhalt einer Webseite ein Hashwert gebildet von dem die eindeutige ID in ElasticSearch abgeleitet wird:
 \begin{minted}{go}
 // Add all documents
 for _, d := range docs {

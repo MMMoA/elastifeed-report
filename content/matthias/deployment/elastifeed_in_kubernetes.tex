@@ -29,6 +29,7 @@ spec:
 
 Im nächsten Schritt geben wir an, wie viele Instanzen des im folgenden definierten Pod laufen sollen und nach welchem Selektierungskriterium die Pods des Deployment identifiziert werden sollen.
 
+\begin{listing}[h]
 \begin{minted}{yaml}
   template:
     metadata:
@@ -58,14 +59,17 @@ Im nächsten Schritt geben wir an, wie viele Instanzen des im folgenden definier
         - name: CONNECTION_TIMEOUT # Never timeout a connection.
           value: "-1"
 \end{minted}
+\caption{Kubernetes Definition für den Scraper Microservice}
+\label{deployment:code:scraper}
+\end{listing}
 
-Der Pod des Scraper besteht aus zwei Containern - unser Microservice benötigt noch einen Chrome-Browser der im Headless Modus läuft.
-Beide Container laufen unter der selben IP Adresse und können über das Loopback-Interface miteinander Kommunizieren.
-Umgebungsvariablen die wir für die Konfiguration des Scraper benötigen werden unter dem \texttt{env} Tag als Liste beschrieben.
+Der Pod des Scraper besteht aus zwei Containern, da unser Microservice noch einen Chrome-Browser im headless Modus benötigt.
+Beide Container teilen sich eine IP Adresse und können über das Loopback-Interface miteinander Kommunizieren.
+Umgebungsvariablen, die wir für die Konfiguration des Scraper benötigen, werden unter dem \texttt{env} Tag als Liste definiiert.
 
 \subsubsection{Loadbalancing zwischen den laufenden Instanzen}
-Das obige \texttt{Deployment} started die Pods, macht diese jedoch nicht verfügbar.
-Es ist möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP Adresse anzusprechen, die sich aber ändern, sobald das Deployment aktualisiert wird.
+Das obige \texttt{Deployment} started die Pods, stellt deren Dienste jedoch noch nicht zur Verfügung.
+Es ist zwar möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP Adresse anzusprechen, sobald das Deployment jedoch aktualisiert wird, kann sich die IP Adresse des Pod ändern.
 Um einen zentralen Eingangspunkt für Anfragen bereitzustellen, benutzen wir ein \texttt{Service} Objekt.
 Hier selektieren wir alle Pods des \texttt{Deployment} über die vorher gesetzten Label.
 Der Service ist über seinen Namen im DNS oder eine einzelne, sich nicht ändernde IP Adresse erreichbar und leitet Anfragen an die dahinterliegenden Pods weiter.
@@ -80,14 +84,14 @@ spec:
   selector:
     app: es-scraper
   ports:
-    - rotocol: TCP 
+    - rotocol: TCP
       port: 80 # We map everything to port 80 so we can omit the port in our code
       targetPort: 8000
 \end{minted}
 
 \subsubsection{Speicherverwaltung}
-Zum Speichern von gerenderten Bildern und PDFs verwenden wir das S3 Protokoll.
-Eine Open-Source Implementation bietet das verteilte Dateisystem Ceph \cite{ceph}, welches über Rook \cite{rook} in einem \ac{k8s} Cluster deployt werden kann.
+Zum Speichern von erzeugten Bildern und PDF-Dateien verwenden wir das S3 Protokoll.
+Eine Open-Source Implementation bietet das verteilte Dateisystem Ceph \cite{ceph}, welches über Rook \cite{rook} in unserem \ac{k8s} Cluster zur Verfügung gestellt wird.
 Nachdem Rook unseren Ceph-Cluster initialisiert hat, können wir mit einem \ac{k8s} Objet einen Objektspeicher für Elastifeed erstellen:
 
 \begin{minted}{yaml}

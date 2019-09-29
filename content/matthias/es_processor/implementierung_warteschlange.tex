@@ -1,13 +1,13 @@
 \subsection{Implementierung der Warteschlange}
 
-Besonders das generieren von Screenshot und PDF-Ansichten einer Webseite hat sich im Entwicklungsprozess als sehr rechenintensiv gestaltet.
+Besonders das Generieren von Screenshot und PDF-Ansichten einer Webseite hat sich im Entwicklungsprozess als sehr rechenintensiv erwiesen.
 Um die Resourcennutzung zu optimieren bietet der Processor die Möglichkeit, nur so viele Anfragen an den Scraper zu senden, wie auch Tabs verfügbar sind.
 Bei Abfragen eines RSS Feeds fallen oft mehr Aufgaben an, als Tabs bei den Scrapern verfügbar sind.
 Lösung dieses Problem ist eine Warteschlange, die mit Redis \cite{redis} realisiert wird.
 In dieser werden in einer doppelt verketteten Liste mit \texttt{RPUSH} Aufgaben gespeichert und mit \texttt{BLPOP} herausgenommen.
-Die \texttt{BLPOP} Funktion nimmt das erste Element aus der Liste heraus.
+Die \texttt{BLPOP} Funktion entfernt das erste Element der Liste und liefert dieses an den Client zurück.
 Sollte kein Element in der Liste sein blockiert die Funktion so lange, bis sie ein Element entnehmen kann.
-Schematisch dargestellt ist der Prozess in dieser \hyperref[processor:image:processor]{Abbildung}
+Schematisch dargestellt ist der Prozess hier \autoref{processor:image:processor}.
 
 \begin{figure}[t]
   \centering
@@ -19,10 +19,10 @@ Schematisch dargestellt ist der Prozess in dieser \hyperref[processor:image:proc
 
 \subsection{Abfragen von RSS Feeds}
 Die RSS Feeds werden zentral in der Datenbank des Collectors gespeichert und sind über eine REST-API verfügbar.
-Um nicht bei jedem aktualisieren der RSS-Feeds alle sich im Feed befindenden Dokumente zu indizieren, wird in Redis als Schlüssen-Wert-Paar der RSS Feed und der Zeitpunkt an dem er zuletzt abgefragt wurde gespeichert.
-Der Zeitpunkt des letzten Abfragens wird an die RSS Komponente von Elastifeed weiter gegeben sodass nur neue Elemente zurück geliefert werden.
+Um nicht bei jeder Aktualisierung der RSS-Feeds alle sich im Feed befindenden Dokumente zu indizieren, wird in Redis als Schlüssen-Wert-Paar die URL des RSS Feed und der Zeitpunkt an dem er zuletzt abgefragt wurde gespeichert.
+Der Zeitpunkt des letzten Abfragens wird an die RSS Komponente von Elastifeed weiter gegeben sodass nur neue Einträge zurück geliefert werden.
 Anschließend werden die Elemente am Ende der Warteschlange hinzugefügt.
-Der Processor koordiniert diesen Prozess einem konfigurierbaren Zeitabstand.
+Der Processor koordiniert diesen Prozess in einem konfigurierbaren Zeitabstand.
 
 \begin{minted}[breaklines]{python}
 for feed in parsed:
