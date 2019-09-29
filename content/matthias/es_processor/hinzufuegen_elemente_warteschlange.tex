@@ -1,6 +1,6 @@
 \subsection{Hinzufügen einzelner Elemente zur Warteschlange}
 Mit der Bibliothek \texttt{Sanic} wird eine REST-Schnittstelle zum Hinzufügen einzelner Elemente generiert.
-Die Schnittstelle wird teilweise direkt von Seiten des Collectors angesprochen, wenn ein Nutzer diese Seite außerhalb eines RSS-Feeds zu seinem Index hinzufügen möchte.
+Die Schnittstelle wird teilweise direkt vonseiten des Collectors angesprochen, wenn ein Nutzer diese Seite außerhalb eines RSS-Feeds zu seinem Index hinzufügen möchte.
 Um dem Nutzer die Daten der hinzugefügten Seite so schnell wie möglich Verfügbar zu machen, werden per API hinzugefügte Elemente an den Anfang der Warteschlange gesetzt und somit priorisiert.
 \begin{minted}[breaklines]{python}
 @app.route("/add", methods=["POST"])

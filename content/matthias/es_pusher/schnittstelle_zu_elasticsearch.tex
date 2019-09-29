@@ -3,7 +3,7 @@ Der Pusher Service bildet die Schnittstelle des Backend zur Datenbank.
 Als Programmiersprache wurde Golang \cite{go} eingesetzt, mit dessen Standartbibliothek eine REST-API als Schnittstelle für interne Anwendungen bereitgestellt wird.
 Die Anbindung der Datenbank wird über die offizielle Bibliothek \texttt{go-elasticsearch}\cite{goes} übernommen.
 Um Nutzer möglichts effektiv voneinander zu trennen, wird je ein Index pro Nutzer verwendet.
-Es besteht die möglichkeit über die REST-API ein oder mehrere Dokumente in dem Index von einem oder mehreren Nutzer zus speichern.
+Es besteht die Möglichkeit über die REST-API ein oder mehrere Dokumente in dem Index von einem oder mehreren Nutzern zu speichern.
 Um die Zusammenarbeit mit dem Frontend-Team zu ermöglichen haben wir gemeinsam ein Dokumenten-Format entwickelt, das eindeutig in einem \texttt{Struct} definiert ist:
 \begin{minted}{go}
 // Document contains the schema of a data entry which is stored in Elasticsearch

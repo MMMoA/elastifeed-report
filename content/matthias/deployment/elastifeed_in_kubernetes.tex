@@ -17,7 +17,7 @@ metadata:
     app: es-scraper
 \end{minted}
 Der erste Tag \texttt{apiVersion: apps/v1} gibt an, welcher Endpunkt der \ac{k8s} API angesprochen werden soll, \texttt{kind} dass wir ein \texttt{Deployment} Objekt erstellen möchten.
-Im folgenden \texttt{metadata} Abschnitt werden Attribute wie der Name des Objekts und seine Label gesetzt, die später zum einfachen Selektieren des Objekt oder einer Gruppe von Objekten helfen.
+Im folgenden \texttt{metadata} Abschnitt werden Attribute wie der Name des Objekts und seine Label gesetzt, die später zum einfachen Selektieren des Objekts oder einer Gruppe von Objekten dienen.
 
 \begin{minted}{yaml}
 spec:
@@ -27,7 +27,7 @@ spec:
       app: es-scraper
 \end{minted}
 
-Im nächsten Schritt geben wir an, wie viele Instanzen des im folgenden definierten Pod laufen sollen und nach welchem Selektierungskriterium die Pods des Deployment identifiziert werden sollen.
+Im nächsten Schritt geben wir an, wie viele Instanzen des im Folgenden definierten Pod laufen sollen und nach welchem Selektionskriterium die Pods des Deployment identifiziert werden sollen.
 
 \begin{listing}[h]
 \begin{minted}{yaml}
@@ -63,18 +63,18 @@ Im nächsten Schritt geben wir an, wie viele Instanzen des im folgenden definier
 \label{deployment:code:scraper}
 \end{listing}
 
-Der Pod des Scraper besteht aus zwei Containern, da unser Microservice noch einen Chrome-Browser im headless Modus benötigt.
-Beide Container teilen sich eine IP Adresse und können über das Loopback-Interface miteinander Kommunizieren.
-Umgebungsvariablen, die wir für die Konfiguration des Scraper benötigen, werden unter dem \texttt{env} Tag als Liste definiiert.
+Der Pod des Scraper besteht aus zwei Containern, da unser Microservice noch einen Chrome-Browser im \quote{headless} Modus benötigt.
+Beide Container teilen sich eine IP-Adresse und können über das Loopback-Interface miteinander Kommunizieren.
+Umgebungsvariablen, die wir für die Konfiguration des Scraper benötigen, werden unter dem \texttt{env} Tag als Liste definiert.
 
 \subsubsection{Loadbalancing zwischen den laufenden Instanzen}
-Das obige \texttt{Deployment} started die Pods, stellt deren Dienste jedoch noch nicht zur Verfügung.
-Es ist zwar möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP Adresse anzusprechen, sobald das Deployment jedoch aktualisiert wird, kann sich die IP Adresse des Pod ändern.
+Das obige \texttt{Deployment} startet die Pods, stellt deren Dienste jedoch noch nicht zur Verfügung.
+Es ist zwar möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP-Adresse anzusprechen, sobald das Deployment jedoch aktualisiert wird, kann sich die IP-Adresse des Pod ändern.
 Um einen zentralen Eingangspunkt für Anfragen bereitzustellen, benutzen wir ein \texttt{Service} Objekt.
 Hier selektieren wir alle Pods des \texttt{Deployment} über die vorher gesetzten Label.
-Der Service ist über seinen Namen im DNS oder eine einzelne, sich nicht ändernde IP Adresse erreichbar und leitet Anfragen an die dahinterliegenden Pods weiter.
+Der Service ist über seinen Namen im DNS oder eine einzelne, sich nicht ändernde IP-Adresse erreichbar und leitet Anfragen an die dahinterliegenden Pods weiter.
 
-\begin{minted}{yaml}
+\begin{minted}[breaklines]{yaml}
 apiVersion: v1
 kind: Service
 metadata:

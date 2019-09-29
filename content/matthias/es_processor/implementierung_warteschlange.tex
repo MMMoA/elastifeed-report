@@ -1,7 +1,7 @@
 \subsection{Implementierung der Warteschlange}
 
 Besonders das Generieren von Screenshot und PDF-Ansichten einer Webseite hat sich im Entwicklungsprozess als sehr rechenintensiv erwiesen.
-Um die Resourcennutzung zu optimieren bietet der Processor die Möglichkeit, nur so viele Anfragen an den Scraper zu senden, wie auch Tabs verfügbar sind.
+Um die Resourcennutzung zu optimieren, bietet der Processor die Möglichkeit, nur so viele Anfragen an den Scraper zu senden, wie auch Tabs verfügbar sind.
 Bei Abfragen eines RSS Feeds fallen oft mehr Aufgaben an, als Tabs bei den Scrapern verfügbar sind.
 Lösung dieses Problem ist eine Warteschlange, die mit Redis \cite{redis} realisiert wird.
 In dieser werden in einer doppelt verketteten Liste mit \texttt{RPUSH} Aufgaben gespeichert und mit \texttt{BLPOP} herausgenommen.
@@ -20,7 +20,7 @@ Schematisch dargestellt ist der Prozess hier \autoref{processor:image:processor}
 \subsection{Abfragen von RSS Feeds}
 Die RSS Feeds werden zentral in der Datenbank des Collectors gespeichert und sind über eine REST-API verfügbar.
 Um nicht bei jeder Aktualisierung der RSS-Feeds alle sich im Feed befindenden Dokumente zu indizieren, wird in Redis als Schlüssen-Wert-Paar die URL des RSS Feed und der Zeitpunkt an dem er zuletzt abgefragt wurde gespeichert.
-Der Zeitpunkt des letzten Abfragens wird an die RSS Komponente von Elastifeed weiter gegeben sodass nur neue Einträge zurück geliefert werden.
+Der Zeitpunkt des letzten Abfragens wird an die RSS Komponente von Elastifeed weiter gegeben, sodass nur neue Einträge zurückgeliefert werden.
 Anschließend werden die Elemente am Ende der Warteschlange hinzugefügt.
 Der Processor koordiniert diesen Prozess in einem konfigurierbaren Zeitabstand.
 

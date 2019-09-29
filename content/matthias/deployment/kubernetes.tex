@@ -8,7 +8,7 @@ Der Controller nimmt über eine HTTP-basierte Schnittstelle Konfigurationen entg
 Die Konfiguration erfolgt über YAML-Dateien, die mit dem Kommandozeilen-Programm \texttt{kubectl} an einen Controller übermittelt werden.
 
 \subsubsection{Pod}
-Die kleinste Einheit bei \ac{k8s} bildet der \textit{Pod}.
+Die kleinste Einheit von \ac{k8s} bildet der \textit{Pod}.
 Er kann einen oder mehrere Container sowie Daten enthalten.
 Pods können erstellt werden, werden aber nicht von \ac{k8s} überwacht.
 Sollte ein Pod nicht verfügbar sein, unternimmt \ac{k8s} keine weiteren Aktionen.
@@ -17,13 +17,13 @@ Sollte ein Pod nicht verfügbar sein, unternimmt \ac{k8s} keine weiteren Aktione
 Um die Verfügbarkeit eines Pod zu Garantieren, kann ein \textit{Deloyment} verwendet werden.
 Dieses beschreibt, wie der zu erzeugende Pod aussehen soll und wie viele Replikate davon existieren sollen.
 Der Controller von K8s verteilt die zu erzeugenden Pods auf die Compute Nodes.
-Wenn jetzt ein Pod abstürzt oder der Server auf dem der Pod ausgeführt wird abstürzt, erkennt der Controller den Ausfall und initiiert die Bereitstellung eines Ersatz.
+Wenn jetzt ein Pod abstürzt oder der Server auf dem der Pod ausgeführt wird abstürzt, erkennt der Controller den Ausfall und initiiert die Bereitstellung eines Ersatzes.
 
 \subsubsection{StatefulSet}
 Pods und Deployments sind stateless und können keine Daten speichern, die nach Neustart oder Löschen eines Pods weiter existieren.
-Um auch Komponenten die Daten speichern müssen in \ac{k8s} zu betreiben existiert das \textit{StatefulSet}.
+Um auch Komponenten die Daten speichern müssen, in \ac{k8s} zu betreiben existiert das \textit{StatefulSet}.
 Dies ist genauso aufgebaut wie ein Deployment, kann aber zusätzlich Speicher bereitstellen.
-Wenn ein Pod ausfällt, wird ein Neuer erzeugt, der auf den gleichen persistenten Speicherbereich wie der alte Zugreifen kann.
+Wenn ein Pod ausfällt, wird ein Neuer erzeugt, der auf den gleichen persistenten Speicherbereich wie der Alte zugreifen kann.
 Beispielsweise Datenbanken die in einem \ac{k8s} Cluster laufen, müssen auf ein StatefulSet zugreifen.
 
 \subsubsection{Service}
@@ -33,4 +33,4 @@ Dieser ist innerhalb des Clusters erreichbar und verteilt eingehende Anfragen au
 
 \subsubsection{Ingress}
 Um von außen über HTTP auf Komponenten innerhalb des Clusters zugreifen zu können, kann ein \textit{Ingress} genutzt werden.
-Dieser leitet eingehende Anfragen die auf ein definiertes Muster passen an einen \ac{k8s} Service weiter.
+Dieser leitet eingehende Anfragen, die auf ein definiertes Muster passen an einen \ac{k8s} Service weiter.
