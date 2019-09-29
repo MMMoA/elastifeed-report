@@ -1,7 +1,7 @@
 % !TeX encoding=utf8
 % !TeX spellcheck = de-DE
 \section{Mercury Web Parser}
-Wie wir in Abschnitt \ref{extractor:ansatz:subsec2} besprochen haben, können wir mithilfe des \ac{HTML DOM} und CSS Query Selectors zuverlässig den relevanten Text  eines Artikels bestimmen. Damit wir nicht Selektoren für alle Websites der Welt definieren müssen, verwenden wir eine Library, die uns viel Arbeit abnimmt. Der Mercury Web Parser von Postlight Labs LLC\cite{mercury_homepage} verwendet genau eine Menge von komplexen CSS Query Selectors und Eigenschaften des HTML DOM um für einen beliebigen Artikel den relevanten Text und mehr zu bestimmen. Der Mercury Parser kann mit nur einer URL oder zusätzlich dem schon heruntergeladenen HTML Dokument aufgerufen werden. In der Praxis verwenden rufen wir ihn nur mit der URL auf. Zusätzlich definieren wir den HTTP Header der Anfrage und mit welcher Formatierung (keine, HTML, Markdown) der relevante Text extrahiert werden soll.
+Wie wir in \autoref{extractor:ansatz:subsec2} besprochen haben, können wir mithilfe des \ac{HTML DOM} und CSS Query Selectors zuverlässig den relevanten Text  eines Artikels bestimmen. Damit wir nicht Selektoren für alle Websites der Welt definieren müssen, verwenden wir eine Library, die uns viel Arbeit abnimmt. Der Mercury Web Parser von Postlight Labs LLC\cite{mercury_homepage} verwendet genau eine Menge von komplexen CSS Query Selectors und Eigenschaften des HTML DOM um für einen beliebigen Artikel den relevanten Text und mehr zu bestimmen. Der Mercury Parser kann mit nur einer URL oder zusätzlich dem schon heruntergeladenen HTML Dokument aufgerufen werden. In der Praxis verwenden rufen wir ihn nur mit der URL auf. Zusätzlich definieren wir den HTTP Header der Anfrage und mit welcher Formatierung (keine, HTML, Markdown) der relevante Text extrahiert werden soll.
 
 \begin{listing}[ht]
 	\label{extractor:code:mercury}
@@ -13,8 +13,6 @@ Wie wir in Abschnitt \ref{extractor:ansatz:subsec2} besprochen haben, können wi
 		fontsize=\footnotesize]{js}{code/mercury-example.js}
 	\caption{Beispielhafter Aufruf des Mercury Web Parsers}
 \end{listing}
-
-
 Das Ergebnis ist ein \ac{JSON} Objekt, die enthaltenen Felder sind in Tabelle \ref{extractor:table:mercury} aufgelistet. Falls der Parser den Wert für ein Feld nicht bestimmen kann, ist er \verb|null|.
 
 \begin{table}
