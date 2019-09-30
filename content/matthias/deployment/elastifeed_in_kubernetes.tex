@@ -1,0 +1,146 @@
+\subsection{Elastifeed in Kubernetes}
+
+Alle Komponenten des Elastifeed-Backends werden als Container ausgeliefert, welche in einem \ac{k8s} Cluster ausgeführt werden.
+Für unsere Testzwecke verwenden wir die minimale \ac{k8s} Distribution k3s \cite{k3s}.
+Neben der Master Instanz, die zeitgleich auch als Worker agiert, fügen sich die verbleibenden VMs als Worker Nodes in den Cluster ein.
+
+\subsubsection{Skalieren der Komponenten}
+
+Jeder Microservice ist in einem \ac{k8s} Deployment als YAML beschrieben:
+\begin{minted}{yaml}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: elastifeed
+  name: es-scraper-deployment
+  labels:
+    app: es-scraper
+\end{minted}
+Der erste Tag \texttt{apiVersion: apps/v1} gibt an, welcher Endpunkt der \ac{k8s} API angesprochen werden soll, \texttt{kind} dass wir ein \texttt{Deployment} Objekt erstellen möchten.
+Im folgenden \texttt{metadata} Abschnitt werden Attribute wie der Name des Objekts und seine Label gesetzt, die später zum einfachen Selektieren des Objekts oder einer Gruppe von Objekten dienen.
+
+\begin{minted}{yaml}
+spec:
+  replicas: 10 # Number of concurrent running instances
+  selector:
+    matchLabels:
+      app: es-scraper
+\end{minted}
+
+Im nächsten Schritt geben wir an, wie viele Instanzen des im Folgenden definierten Pod laufen sollen und nach welchem Selektionskriterium die Pods des Deployment identifiziert werden sollen.
+
+\begin{listing}[h]
+\begin{minted}{yaml}
+  template:
+    metadata:
+      labels:
+        app: es-scraper
+    spec:
+      containers:
+      - name: es-scraper
+        image: quay.io/elastifeed/es-scraper:latest
+        env:
+        - name: S3_ENDPOINT
+          value: http://es-s3.rocketlan.de/
+        - name: S3_BUCKET_NAME
+          value: elastifeed
+        - name: API_BIND
+          value: ":8000"
+        - name: MERCURY_URL
+          value: "http://es-extractor-service/mercury/url"
+        envFrom:
+        - secretRef:
+          name: s3-credentials
+        ports:
+        - containerPort: 8000 # Exposed port
+      - name: browserless
+        image: browserless/chrome:latest
+        env:
+        - name: CONNECTION_TIMEOUT # Never timeout a connection.
+          value: "-1"
+\end{minted}
+\caption{Kubernetes Definition für den Scraper Microservice}
+\label{deployment:code:scraper}
+\end{listing}
+
+Der Pod des Scraper besteht aus zwei Containern, da unser Microservice noch einen Chrome-Browser im \quote{headless} Modus benötigt.
+Beide Container teilen sich eine IP-Adresse und können über das Loopback-Interface miteinander Kommunizieren.
+Umgebungsvariablen, die wir für die Konfiguration des Scraper benötigen, werden unter dem \texttt{env} Tag als Liste definiert.
+
+\subsubsection{Loadbalancing zwischen den laufenden Instanzen}
+Das obige \texttt{Deployment} startet die Pods, stellt deren Dienste jedoch noch nicht zur Verfügung.
+Es ist zwar möglich, jeden Pod einzeln über seinen Namen oder direkt über seine IP-Adresse anzusprechen, sobald das Deployment jedoch aktualisiert wird, kann sich die IP-Adresse des Pod ändern.
+Um einen zentralen Eingangspunkt für Anfragen bereitzustellen, benutzen wir ein \texttt{Service} Objekt.
+Hier selektieren wir alle Pods des \texttt{Deployment} über die vorher gesetzten Label.
+Der Service ist über seinen Namen im DNS oder eine einzelne, sich nicht ändernde IP-Adresse erreichbar und leitet Anfragen an die dahinterliegenden Pods weiter.
+
+\begin{minted}[breaklines]{yaml}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: elastifeed
+  name: es-scraper-service
+spec:
+  selector:
+    app: es-scraper
+  ports:
+    - rotocol: TCP
+      port: 80 # We map everything to port 80 so we can omit the port in our code
+      targetPort: 8000
+\end{minted}
+
+\subsubsection{Speicherverwaltung}
+Zum Speichern von erzeugten Bildern und PDF-Dateien verwenden wir das S3 Protokoll.
+Eine Open-Source Implementation bietet das verteilte Dateisystem Ceph \cite{ceph}, welches über Rook \cite{rook} in unserem \ac{k8s} Cluster zur Verfügung gestellt wird.
+Nachdem Rook unseren Ceph-Cluster initialisiert hat, können wir mit einem \ac{k8s} Objet einen Objektspeicher für Elastifeed erstellen:
+
+\begin{minted}{yaml}
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: s3-store
+  namespace: rook-ceph
+spec:
+  metadataPool:
+    failureDomain: host
+    replicated:
+      size: 2
+  dataPool:
+    failureDomain: host
+    erasureCoded:
+      dataChunks: 2
+      codingChunks: 1
+  gateway:
+    type: s3
+    sslCertificateRef:
+    port: 80
+    securePort:
+    instances: 1
+    allNodes: false
+\end{minted}
+
+Diesen müssen wir im Anschluss noch von außen erreichbar machen:
+
+\begin{minted}{yaml}
+apiVersion: v1
+kind: Service
+metadata:
+  name: rook-ceph-rgw-s3-store-external
+  namespace: rook-ceph
+  labels:
+    app: rook-ceph-rgw
+    rook_cluster: rook-ceph
+    rook_object_store: s3-store
+spec:
+  ports:
+  - name: rgw
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: rook-ceph-rgw
+    rook_cluster: rook-ceph
+    rook_object_store: es-store
+  sessionAffinity: None
+  type: NodePort
+\end{minted}

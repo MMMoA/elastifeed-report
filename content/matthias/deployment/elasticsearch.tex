@@ -1,0 +1,15 @@
+\subsection{Elasticsearch}
+Die Elasticsearch-Datenbank kann als Cluster bereitgestellt werden, der aus vier Nodes mit unterschiedlichen Anwendungsarten besteht:
+\begin{enumerate}
+        \item \textbf{data node}: Hier werden eigentliche Daten gespeichert und Operationen auf den Daten ausgeführt
+        \item \textbf{master node}: Zuständig für die Cluster Verwaltung
+        \item \textbf{clien node}: Leitet Anfragen an data oder master Nodes weiter
+        \item \textbf{Ingest node}: Transformieren von Dokumenten bevor sie zu einem Index hinzugefügt werden
+\end{enumerate}
+Die minimale Konfiguration eines \quote{Cluster} ist dabei eine Master und eine Daten Instanz – beide Dienste können von einer Instanz abgebildet werden.
+Um die uns zur Verfügung stehenden Ressourcen so effektiv wie möglich zu nutzen, verwenden wir auf den 3 VMs je eine Elasticsearch-Instanz im Master und Daten Modus.
+Um ein Split Brain, also zwei gegeneinander operierende Master Nodes, zu vermeiden, ist der Cluster erst einsatzbereit, sobald zwei oder mehr Nodes dem Cluster beigetreten sind.
+Die Installation von Elasticsearch wird wie auch die Provisionierung der VMs von Ansible übernommen und kann auf beliebig viele Instanzen im Cluster Skaliert werden.
+
+Mit Kibana \cite{esk} wird eine Web-Oberfläche für Elasticsearch angeboten, die insbesondere zum Debuggen häufig zum Einsatz kommt.
+Installiert wird Kibana erneut mit der Unterstützung von Ansible.

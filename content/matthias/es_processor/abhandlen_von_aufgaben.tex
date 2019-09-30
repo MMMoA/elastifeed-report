@@ -1,0 +1,11 @@
+\section{Abhandeln von anfallenden Aufgaben - Processor}
+Der Processor ist ein in Python entwickeltes Programm, das drei wesentliche Funktionen der Prozess-Struktur von Elastifeed bereitstellt:
+\begin{enumerate}
+        \item Abarbeiten von wartenden Scrape-Anfragen
+        \item Periodisches Abfragen von RSS Feeds
+        \item Hinzufügen einzelner Scrape – Anfragen zur Warteschlange
+\end{enumerate}
+Der Processor dient hierbei nur als Verteiler, der Anfragen an die vorher aufgeschlüsselten Services stellt und erhaltene Antworten weiter gibt.
+Um diesen Prozess so effizient wie möglich zu gestalten, wird das AsyncIO Framework in Python \cite{aiopy} verwendet.
+Dieses wurde in Python 3.5 hinzugefügt und bietet eine auf \texttt{async/await} basierte Programmierschnittstelle für parallele Programmierung auf der Basis von Coroutinen.
+
