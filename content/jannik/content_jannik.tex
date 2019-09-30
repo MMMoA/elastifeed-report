@@ -7,7 +7,7 @@
     Im Gesamtsystem soll es möglich sein, sich als Nutzer einzuloggen und individuelle Daten im System zu hinterlegen.
     Dazu müssen wir ein System bereitstellen, über das sich ein Nutzer im System registrieren und anmelden kann und alle relevanten Nutzerdaten gespeichert werden.
     
-    Da es sich hierbei um eine nach außen sichtbare, oberflächenlose Schnittstelle handelt, muss das System eine REST-Schnittstelle bereitstellen, welche nicht nur das Erstellen und Abfragen von Daten erlaubt, sondern auch das Authentifizeren von einzelnen Anfragen an das System. Darüber hinaus muss das System mit den anderen Diensten der Microsverice-Architektur kommunizieren um Anfragen von außen im Gesamtsystem zu verarbeiten.
+    Da es sich hierbei um eine nach außen sichtbare, oberflächenlose Schnittstelle handelt, muss das System eine REST-Schnittstelle bereitstellen, welche nicht nur das Erstellen und Abfragen von Daten erlaubt, sondern auch das Authentifizieren von einzelnen Anfragen an das System. Darüber hinaus muss das System mit den anderen Diensten der Microsverice-Architektur kommunizieren, um Anfragen von außen im Gesamtsystem zu verarbeiten.
     
     Zudem muss das Collectorsystem eine Möglichkeit bereitstellen beliebige Web-Inhalte im elastifeed-System zu speichern. Dafür muss eine Oberfläche bereitgestellt werden, über das ein Nutzer Inhalte im System hinterlegen kann.
 
@@ -18,7 +18,7 @@
     
     
     \subsection{Composer}
-        Laravel setzt zur Verwaltung von externen Abhängigkeiten auf Composer. Composer ist eine Paketverwaltung für die Programmiersprache PHP und wird über die Commandozeile ausgeführt. Die Abhängigkeiten der Software werden mit \texttt{composer install} installiert und in einem projektspezfiscihen \texttt{/vedor} Ordner gespeichert. Weitere Abhängigkeiten können mittels \texttt{composer require username/packageName} von Packagist, dem globalen PHP Package Repository installiert werden. Informationen über die Abhängigkeiten werden in einer \texttt{composer.json} festgehalten, wo ebefalls Informationen über Namensräume, die Systemumgebung und das Projekt selbst enthalten sind. 
+        Laravel setzt zur Verwaltung von externen Abhängigkeiten auf Composer. Composer ist eine Paketverwaltung für die Programmiersprache PHP und wird über die Commandozeile ausgeführt. Die Abhängigkeiten der Software werden mit \texttt{composer install} installiert und in einem projektspezifischen \texttt{/vedor} Ordner gespeichert. Weitere Abhängigkeiten können mittels \texttt{composer require username/packageName} von Packagist, dem globalen PHP Package Repository installiert werden. Informationen über die Abhängigkeiten werden in einer \texttt{composer.json} festgehalten, wo ebefalls Informationen über Namensräume, die Systemumgebung und das Projekt selbst enthalten sind. 
         
         \begin{lstlisting}[caption={Ausschnitt composer.json für das Collector-System}]
 {
@@ -81,10 +81,10 @@ php artisan passport:install
     
     Das Collector-System besitzt drei große Datentypen, welche mit dem Eloquent ORM im System verwendet werden.
     
-    \begin{center}
+    \begin{figure}[h]
         \includegraphics[width=\textwidth]{images/collector-erm.png}
         \caption{Entity-Relationship-Modell des Collector-Systems}
-    \end{center}
+    \end{figure}
     
     \subsection{User}
         Ein Nutzer besteht aus einer ID, einem Namen, einer einzigartigen E-Mail Adresse und einem Passwort-Hash. Darüber hinaus werden weitere Meta-Informationen mit dem Nutzer gespeichert, welche dazu dienen, die Schnittstellen-Autentifzierung zu ermöglichen.
@@ -94,7 +94,7 @@ php artisan passport:install
         Eine Kategorie gruppiert eine Menge von gespeicherten Seiten. Sie besteht aus einer ID, einem Namen und Meta-Informationen im JSON-Format, welche bei Erweiterung des System mit zusätzlichen Informationen befüllt werden können.
         
     \subsection{RSS-Feed}
-        Ein RSS-Feed ist ein Link zu einem realen Web-RSS-Feed. Er besteht aus einer ID, einem Link und dessen einzigartigen Hash-Wert. Ein RSS-Feed kann von einem oder mehreren Nutzern abboniert werden und ein Nutzer kann null oder beliebig viele RSS-Feeds abbonieren.
+        Ein RSS-Feed ist ein Link zu einem realen Web-RSS-Feed. Er besteht aus einer ID, einem Link und dessen einzigartigen Hash-Wert. Ein RSS-Feed kann von einem oder mehreren Nutzern abonniert werden und ein Nutzer kann null oder beliebig viele RSS-Feeds abonnieren.
     
 
 \section{REST-Schnittstelle}
@@ -112,12 +112,13 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9
     \subsection{Authentifizierung mittels JWT}
         Einige dieser Routen sind nur für registrierte Nutzer erreichbar. Darum werden diese durch eine Middleware, welche die Existenz und Korrektheit eines JSON Web Token prüft, geschützt. 
         
-        \begin{center}
+        \begin{figure}[h]
+        	\centering
             \includegraphics[width=\textwidth]{images/collector-jwt-auth-process.png}
             \caption{Schematischer Ablauf der Authentifizierungs-Middleware}
-        \end{center}
+        \end{figure}
         
-        JSON Web Tokens (JWT) wurden mit der RFC 7519 international standartisiert und sind ein einmalig generierte Token, welches, nach Ausstellung für viele Anfragen an eine Schnittstelle, genutzt werden können, um den Nutzer zu identifizieren und autorisieren. Im Gegensatzt zur herkömlichen Name, Passwort Authentifizierung muss zwischen den einzelnen Anfragen nur das Token und nicht ein Passwort im Klartext zwischengespeichert werden.
+        JSON Web Tokens (JWT) wurden mit der RFC 7519 international standardisiert und sind ein einmalig generierte Token, welches, nach Ausstellung für viele Anfragen an eine Schnittstelle, genutzt werden können, um den Nutzer zu identifizieren und autorisieren. Im Gegensatz zur herkömmlichen Name, Passwort Authentifizierung muss zwischen den einzelnen Anfragen nur das Token und nicht ein Passwort im Klartext zwischengespeichert werden.
 
         Im Collector-System wird das JWT im \texttt{/v1/login}-Endpunkt ausgestellt, wenn Benutzername und Passwort korrekt sind und gewährt Zugriff auf alle Nutzerspezifischen Endpunkte der REST-Schnittstelle. Voraussetzung ist dessen Präsenz im Authorization Header nach dem Bearer Schema (\texttt{Bearer: <token>}) bei jeder Anfrage.
         
@@ -125,7 +126,7 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9
         Ein JSON-Web Token besteht aus folgenden Teilen, welche jeweils im JSON-Format dargestellt sind.
         \begin{itemize}
             \item Header: Enthält Metainformationen zum Token und Informationen zum verwendeten Hash-Algorithmus
-            \item Inhalt: Im Token gespeicherte Informationen mit Steuerungsbefehle zur Gültigkeit, Ausstelungszeitpunkt und mehr
+            \item Inhalt: Im Token gespeicherte Informationen mit Steuerungsbefehle zur Gültigkeit, Ausstellungszeitpunkt und mehr
             \item Signatur: Header, Inhalt und ein 256 bit Key werden gemeinsam mit dem im Header definiertem Algorithmus gehasht. Die Signatur wird dazu genutzt das Token zu verifizieren.
         \end{itemize}
         
@@ -187,7 +188,7 @@ Route::group(['middleware' => 'auth:api'], function (){
     Da das Collector-System als öffentliche Schnittstelle bereits von außen erreichbar ist, wird das Bookmarklet und der Client-Pusher über das Laravel-System bereitgestellt.
     
     \subsection{Bookmarklet}
-        Ein Bookmarklet ist ein Link, welcher auf Klick JavaScript-Code im aktuellem Browser-Tab ausführt. Dieser Link kann ganz einfach mittels Drag-and-Drop in die Lesezeichen-Leiste jedes Browser gezogen werden, womit der Nutzer von überall auf den JavaScript-Code zugreifen kann.
+        Ein Bookmarklet ist ein Link, welcher auf Klick JavaScript-Code im aktuellem Browser-Tab ausführt. Dieser Link kann ganz einfach mittels Drag-and-Drop in die Lesezeichen-Leiste jedes Browsers gezogen werden, womit der Nutzer von überall auf den JavaScript-Code zugreifen kann.
         
         Das elastifeed Bookmarklet merkt sich lediglich die aktuelle URL und leitet anschließend in das Collector-System um, wo der Client-Pusher dafür zuständig ist, das Speichern der Seite im elastifeed-System auszuführen.
         
@@ -202,10 +203,11 @@ hello world bookmarklet
 
         Abhängig vom zu speicherndem Inhalt, kann der Nutzer individuelle Metadaten hinterlegen und anschließend den finalen Speichervorgang bestätigen.
 
-        \begin{center}
+        \begin{figure}[h]
+        	\centering
             \includegraphics[width=\textwidth]{images/collector-pusher-process.png}
             \caption{Ablauf im Client-Pusher Systems}
-        \end{center}
+        \end{figure}
         
         \subsubsection{npm und die package.json}
             Im JavaScript Ökosystem wird der node package manager (npm) verwendet um Abhängigkeiten zu verwalten. Ähnlich Composer können Abhängigkeiten mittels \texttt{npm install} installiert werden und weitere Pakete mittels \texttt{npm install paketname} hinzugefügt werden. Informationen über die Abhängigkeiten werden in der \texttt{package.json} festgehalten, wo ebenfalls Scripts definiert werden können, welche für Build- und Compile-Prozesse verwendet werden.

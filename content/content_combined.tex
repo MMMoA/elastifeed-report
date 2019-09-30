@@ -1,0 +1,34 @@
+
+\chapter*{Einleitung}
+{\large
+In unserer Projektarbeit haben wir das Backend für ein System entwickelt, das automatisiert Webseiten indiziert und an einer zentralen Stelle die Informationen zusammenführt.\\
+Das entsprechende Softwaresystem bildet eine Microservice Architektur, deren Aufbau und Verbindungen der einzelnen Komponenten in den folgenden Kapiteln beschrieben sind.
+}
+
+\KOMAoptions{open=left} %% Make the next chapter begin at on the next page
+\chapter{Deployment}
+\chapterauthor{Matthias Riegler}
+\input{content/matthias/deployment/einfuehrung.tex}
+\input{content/matthias/deployment/server.tex}
+\input{content/matthias/deployment/container.tex}
+\input{content/matthias/deployment/elasticsearch.tex}
+\input{content/matthias/deployment/kubernetes.tex}
+\input{content/matthias/deployment/elastifeed_in_kubernetes.tex}
+
+\KOMAoptions{open=right} % Don't forget to reset it
+\input{content/jannik/content_jannik.tex}
+
+\input{content/mark/content_mark.tex}
+
+\input{content/jorge/content_jorge.tex}
+
+
+\chapter{Pusher}
+\chapterauthor{Matthias Riegler}
+\input{content/matthias/es_pusher/schnittstelle_zu_elasticsearch.tex}
+
+\chapter{Processor}
+\chapterauthor{Matthias Riegler}
+\input{content/matthias/es_processor/abhandlen_von_aufgaben.tex}
+\input{content/matthias/es_processor/hinzufuegen_elemente_warteschlange.tex}
+\input{content/matthias/es_processor/implementierung_warteschlange.tex}
