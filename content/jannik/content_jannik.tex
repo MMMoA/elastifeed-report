@@ -106,14 +106,15 @@ php artisan passport:install
     Im folgenden sehen Sie ein Beispiel einer Routendefinition, bei der ein \texttt{DELETE}-Request auf \texttt{/feeds/{id}} die \texttt{removeFeeed} Methode des \texttt{app/Http/Controllers/API/FeedController}-Controllers aufruft. Der Platzhalter \texttt{{id}} ist hier in seiner Form auf einen numerischen Wert mit mindestens einem Zeichen festgelegt.
 
     \begin{lstlisting}
-Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9]+');
+Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
+    ->where('id', '[0-9]+');
     \end{lstlisting}
     
     \subsection{Authentifizierung mittels JWT}
         Einige dieser Routen sind nur für registrierte Nutzer erreichbar. Darum werden diese durch eine Middleware, welche die Existenz und Korrektheit eines JSON Web Token prüft, geschützt. 
         
         \begin{center}
-            \includegraphics[width=\textwidth]{images/collector-jwt-auth-process.png}
+            \includegraphics[width=\textwidth]{images/jwt-auth-process.png}
             \caption{Schematischer Ablauf der Authentifizierungs-Middleware}
         \end{center}
         
@@ -149,7 +150,8 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9
             \begin{lstlisting}
 Route::get('/feeds', 'API\FeedController@getAll');
 Route::post('/feeds', 'API\FeedController@insertNew');
-Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9]+');
+Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
+    ->where('id', '[0-9]+');
             \end{lstlisting}
         
         \subsubsection{Kategorien}
@@ -158,7 +160,8 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9
             \begin{lstlisting}
 Route::get('/categories', 'API\CategoryController@getAll');
 Route::post('/categories', 'API\CategoryController@insertNew');
-Route::delete('/categories/{id}', 'API\CategoryController@removeCategory')->where('id', '[0-9]+');
+Route::delete('/categories/{id}', 'API\CategoryController@removeCategory')
+    ->where('id', '[0-9]+');
             \end{lstlisting}
         
         \subsubsection{Seiten}
@@ -180,8 +183,65 @@ Route::group(['middleware' => 'auth:api'], function (){
 });
             \end{lstlisting}
 
-\section{Seiten im System speichern}
-\subsection{Problemstellung}
-\subsection{Bookmarklet}
-\subsection{Web-Application}
-\subsubsection{React}
+
+\section{Speichern von Seiten}
+    Eine weitere Anforderung am Projekt war es, dass ein Nutzer während er im Browser eine Seite betrachtet sofort diese im elastifeed-System abspeichern kann. Es muss also möglich sein, aus dem Browser, ohne das Fenster oder den Tab zu wechseln eine Webseite oder einen Feed im System abspeichern zu können. Mit einem Browser-Plugin kann diese Funktion zwra realisiert werden, doch es müsste für alle gängigen Browser ein seperates Plugin entwickelt werden. Je nach Browser unterscheiden sich Anforderungen und Möglichkeiten, was die Bereitstellung eines einheitlichem und zukunftssicherem Systems erschwert. Um den Aufwand klein zu halten, stellen wir ein Bookmarklet bereit, welches den Nutzer in eine Web-Application, den Client-Pusher, führt, wo die Seite final im System gespeichert werden kann.
+    
+    Da das Collector-System als öffentliche Schnittstelle bereits von außen erreichbar ist, wird das Bookmarklet und die Web-Application über das Laravel-System ausgegeben.
+    
+    \subsection{Bookmarklet}
+        Ein Bookmarklet ist ein Link, welcher auf Klick JavaScript-Code im aktuellem Browser-Tab ausführt. Dieser Link kann ganz einfach mittels Drag-and-Drop in die Lesezeichen-Leiste jedes Browser gezogen werden, womit der Nutzer von überall auf den JavaScript-Code zugreifen kann.
+        
+        Das elastifeed Bookmarklet merkt sich lediglich die aktuelle URL und leitet anschließend in das Collector-System um, wo der Client-Pusher dafür zuständig ist, das Speichern der Seite im elastifeed-System auszuführen.
+        
+        \begin{lstlisting}[caption=HTML Aufbau eines Bookmarklet]
+<a href="javascript:(function(){ alert('hello world'); })();">
+hello world bookmarklet
+</a>
+        \end{lstlisting}
+
+    \subsection{Client-Pusher}
+        Der Client-Pusher ist eine eigenständige Web-Applikation basierend auf dem weit verbreitetem JavaScript-Framework React. React ist darauf spezialisiert dynamische Nutzeroberflächen im Browser darzustellen und wir vom Collector-System bereitgestellt. Der Client-Pusher kommuniziert dabei zur Laufzeit mit der REST-Schnittstelle des Collector-Systems um die Seiten- oder RSS-Feed-Daten vorzubereiten und schließlich im System zu speichern.
+
+        \begin{center}
+            \includegraphics[width=\textwidth]{images/collector-pusher-process.png}
+            \caption{Ablauf im Client-Pusher Systems}
+        \end{center}
+        
+        \subsubsection{npm und die package.json}
+            Im JavaScript Ökosystem wird der node package manager (npm) verwendet um Abhängigkeiten zu verwalten. Ähnlich Composer können Abhängigkeiten mittels \texttt{npm install} installiert werden und weitere Pakete mittels \texttt{npm install paketname} hinzugefügt werden. Informationen über die Abhängigkeiten werden in einer \texttt{package.json} festgehalten, wo ebenfalls Scripts definiert werden können, welche für Build-Prozesse verwendet werden.
+            
+            \begin{lstlisting}[caption=Ausschnitt package.json des Client-Pushers]
+{
+    "private": true,
+    "scripts": {
+    
+        ...
+        
+        "prod": "npm run production"
+        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+    },
+   
+    ...
+    
+    "dependencies": {
+        "axios": "^0.18",
+        "jquery": "^3.4.1",
+        "normalize.css": "^8.0.1",
+        "react": "^16.8.6",
+        "react-dom": "^16.8.6",
+        "select2": "^4.0.7",
+        "sff": "^1.2.0"
+    }
+}
+        \end{lstlisting}
+        
+        Im Client-Pusher wurde neben React folgende Pakete installiert:
+        
+        \begin{itemize}
+            \item axios: Bibliothek um HTTP-Requests mit JavaScript zu vereinfachen
+            \item jQuery: Bibilothek um den DOM vereinfacht zu manipulieren
+            \item normalize.css: CSS-Dateien um browserspezifische Unterschiede vorzubeugen
+            \item select2: Bibliothek zur verbesserten Darstellung von Select-Feldern
+            \item sff: CSS-Framework zum beschleunigten Aufbau des User Interfaces
+        \end{itemize}
