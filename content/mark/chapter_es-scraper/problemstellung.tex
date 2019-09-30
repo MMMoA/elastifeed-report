@@ -1,0 +1,7 @@
+% !TeX encoding=utf8
+% !TeX spellcheck = de-DE
+\section{Problemstellung}
+Ergänzend zum Auslesen des relevanten Textes einer Website muss diese ebenfalls in Bildform angezeigt werden. Speziell wurde definiert, dass jede Seite in Form einer PDF und eines Screenshots vorlegen muss. \\
+Dazu müssen wir bestimmen, wie man eine HTML Datei in solche Formate umwandelt. Wie benötigen also eine Art HTML Parser. Am bekanntesten sind HTML Parser in Webbrowsern, wo sie jeden Tag zum Einsatz kommen. Es stellt sich also die Frage, ob es einen Webbrowser gibt, der ohne eine grafische Benutzeroberfläche komplett über eine API oder als Library steuerbar ist.
+Weiter haben wir bedacht, dass diese Operationen rechenintensiv sind. Demnach müssen wir einen Weg finden, die Implementierung möglichst effizient und nebenläufig zu machen. Das System darf auch bei einigen duzend Anfragen nicht hoffnungslos überlastet sein. \\
+Selbstverständlich muss die Implementierung auch zu der Infrastruktur passen. Dementsprechend wird wieder ein REST Interface benötigt, die Applikation sollte nach der Philosophie der Microservices konzipiert sein und die Rückgabewerte sollten klar und einfach weiterzuverwenden sein.

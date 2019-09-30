@@ -1,0 +1,23 @@
+% !TeX encoding=utf8
+% !TeX spellcheck = de-DE
+\section{Deployment} \label{scraper:sec:deployment}
+Um eine beliebige Menge von Instanzen des es-scraper in das Kubernetes Cluster aufzusetzen, verwenden wir einen Service der den Port des Servers auf Port 80 umleitet, sowie ein Deployment, siehe \autoref{deployment:code:scraper}. Das Deployment definiert 6 benötigte Umgebungsvariablen, die Anzahl der gewünschten Replikate und das Docker Image. \\
+\begin{table}[h]
+\centering
+\begin{tabu}{lX}
+	\toprule
+	Umgebungsvariable & Beschreibung \\ \midrule
+	\texttt{S3\_ENDPOINT}& Endpunkt für der S3 Instanz\\
+	\texttt{S3\_BUCKET\_NAME}& Name des Buckets der S3 Instanz\\
+	\texttt{API\_BIND}& IP:PORT an dem der Server gestartet werden soll\\
+	\texttt{MERCURY\_URL}& IP:PORT der es-extractor Instanz die verwendet werden soll, oder entsprechender Kubernetes Service\\
+	\texttt{AWS\_ACCESS\_KEY\_ID} & Key ID für AWS\\
+	\texttt{AWS\_SECRET\_ACCESS\_KEY} & Secret Key für AWS\\ \bottomrule
+\end{tabu}
+\caption{Umgebungsvariablen es-scraper}
+\end{table}
+
+\subsection*{Browserless}
+Um Probleme mit verschiedene Versionen von Google Chrome zu vermeiden, verwenden wir zusätzlich das Docker Image browserless/chrome \cite{browserless}. Dies ist ein wohlgetester Browser der immer gleich funktioniert. Jede Instanz des es-scraper hat so ihren eigenen Browser, zu dem sie sich verbinden kann. Mit dem Kommando 
+\mint{bash}{kubectl logs es-scraper-deployment-xxxxxxxx-yyyyy browserless}
+kann der Log dieses Browsers eingesehen werden. Manchmal stürzen diese Browser ab und müssen manuell neu gestartet werden. Weiterhin kann man zusätzlich von diesem Image den Port weiterleiten, um auf ein Debugging Interface zuzugreifen.

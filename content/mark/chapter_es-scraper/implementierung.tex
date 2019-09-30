@@ -1,0 +1,133 @@
+% !TeX encoding=utf8
+% !TeX spellcheck = de-DE
+\pagebreak
+\section{Implementierung} \label{scraper:sec:implementation}
+Mithilfe der oben besprochenen Implementierungen des CDP können wir nun anfangen einen mächtigen Service zu entwickeln, der in der Lage ist, eine Url entgegenzunehmen und für diese Screenshots und PDF Dateien zu erstellen. Zusätzlich definieren wir auch, dass dieser Service als einziger mit dem es-extractor zur Textentnahme kommuniziert. Folglich wird er in der Lage sein, eine Url entgegenzunehmen und dann als Antwort die kompletten Informationen über diese Website zu extrahieren und zurückzugeben. Wir geben ihm den Namen es-scraper. \\
+Zuerst werden wir besprechen wie wir die generierten Screenshots und PDF Dateien abspeichern, danach sehen wir die Strukturen die sicherstellen, dass dieser Service so effizient wie möglich arbeitet und wie wir diese parallelen Abläufe kontrollieren.
+\subsection{Speichern großer Dateien} \label{scraper:subsec:s3}
+Für jede Website generieren wir einige relativ große Dateien. Elasticsearch ist zwar in der Lage, binäre Blobs abzuspeichern, zu viele von diesen verlangsamen aber das Generieren der Indizes. Zusätzlich wollten wir die Struktur der Dokumente in Elasticsearch nicht zu weit abändern. Stattdessen haben wir uns entschieden für die PDF Dateien, Screenshots und Thumbnails einen externen Objekt Speicher zu verwenden. \\
+Dieser Objekt Speicher wird von der Library \verb|rook| gestellt. \verb|rook| ist ein Tool zur Speicherorchestrierung in Kubernetes. Es bietet viele verschiedene Möglichkeiten Daten abzuspeichern wie beispielsweise NFS, EdgeFS oder Ceph. Wir verwenden Ceph. Ceph ist ein verteiltes Dateisystem, welches über eine REST API gesteuert werden kann. Diese REST API basiert auf der API von Amazons S3 (Amazon Simple Storage Service). Deshalb können unsere Applikationen auch einfach mit bestehenden S3 Clients mit diesem verteilten Speicher kommunizieren. \\ \\
+Die binären Daten können wir dann einfach hochladen, die Variable \verb|result| enthält die Daten die durch das CDP bestimmt worden:
+\begin{minted}[
+frame=lines, 
+framesep=2mm, 
+linenos, 
+baselinestretch=1.2, 
+fontsize=\footnotesize]{go}
+// Save a screenshot
+savePath, saverr := tab.Store.Upload(result, "png")
+// Return an error to the user if the saving failed.
+if saverr != nil { 
+	ch <- ChromeTabReturns{nil, saverr}
+	return
+}
+\end{minted}
+Als Rückgabe erhalten wir eine Url, über die wir die Datei wieder herunterzuladen können. Diese Url speichern wir nun im Dokument in Elasticsearch.
+
+\subsection{Parallele Bearbeitung von Tabs}
+Die größte Optimierung, die wir vorgenommen haben, ist, dass eine Programminstanz theoretisch beliebig viele Tabs gleichzeitig bearbeiten kann. Dies ermöglicht, dass das System immer optimal ausgelastet ist. Hierfür haben wir eine Datenstruktur definiert, die einen Tab beschreibt. 
+\begin{listing}[h]
+	\inputminted[
+	frame=lines, 
+	framesep=2mm, 
+	linenos, 
+	baselinestretch=1.2, 
+	fontsize=\footnotesize]{go}{code/es-scraper-tab.go}
+	\caption{Tab – Datenstruktur}
+	\label{scraper:code:tab}
+\end{listing}
+Die \verb|ID| ist lediglich eine Zahl die einen Tab eindeutig identifiziert und wird hauptsächlich verwendet um Protokolle lesbarer zu machen. Diese Zahl geht von $0$ bis Anzahl der Tabs$-1$. 
+Wie in \autoref{scraper:sec:chromedp} besprochen, wird ein Tab intern im CDP durch einen Kontext beschrieben. Diesen Kontext nutzen wir nun aus, um Aktionen auf einem bestimmten Tab auszuführen. Die \verb|Stop| Funktion ist dazu da, um einen Tab zu schließen. Sie sollte aber generell nicht verwendet werden, da der Browser herunterfahren wird, wenn er erkennt, dass er weniger Tabs hat, als er anpreist. Die \verb|URL| beinhaltet die Website die momentan bearbeitet wird. Der \verb|State| beschreibt den Status, in dem sich dieser Tab befindet. Er kann entweder \verb|Accepting| oder \verb|Busy| sein. Wenn er \verb|Busy| ist, kann diesem Tab keine neue Aufgabe zugeordnet werden, da schon eine in Arbeit ist. \verb|Store| wird wie oben verwendet, um auf das verteilte Dateisystem zuzugreifen, das Screenshots, PDF Dateien und Thumbnails speichert. Der \verb|ContentSize| beinhaltet die absoluten Maße der aktuell geladenen Website. Diese werden verwendet, um zu bestimmen, wie groß der Screenshot und die PDF sein müssen um die gesamte Website einzufangen (siehe Abschnitte \ref{scraper:subsec:go:pdf}, \ref{scraper:subsec:go:screenshot}). Letztlich die \verb|MercuryURL| beinhaltet die URL, über die der Tab mit dem es-extractor kommunizieren kann. Der es-extractor bietet die Funktionalität den relevanten Text einer Website zu bestimmen. \\ \\ Zusätzlich zu der parallelen Bearbeitung von mehreren Tabs haben wir die einzelnen Funktionen so definiert, dass sie ebenfalls nicht aufeinander warten müssen. Auf diesem Weg können Screenshot, PDFs und der relevante Text einer Website gleichzeitig erzeugt werden. Als Aktionen auf einem Tab definieren wir einige Funktionen:
+
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Ready()}} Wird von der Aufgabenverteilung verwendet, um den Status eines Tabs auf \quote{bereit für die nächste Aufgabe} zu setzen.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Busy()}} Wird von der Aufgabenverteilung verwendet, um den Status eines Tabs auf \quote{beschäftigt} zu setzen.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Navigate(url string) error}} Navigiert einen Tab zu einer gegebenen URL und wartet dann darauf, dass diese Seite geladen ist (\autoref{scraper:code:navigate}). Speichert zusätzlich die Maße der Seite in \verb|ContentSize|. Läuft innerhalb eines Tabs nicht nebenläufig, sondern blockiert, bis die Seite geladen ist oder ein Fehler auftritt. 
+\paragraph{\mintinline{go}{func (tab *ChromeTab) thumbnail(r *map[string]interface{}) (string, error)}} \text{ }\\ Nimmt den Rückgabewert des es-extractor (\autoref{extractor:table:mercury}) und lädt dann das Vorschaubild im Feld \verb|lead_image_url| herunter und speichert es. 
+\paragraph{\mintinline{go}{func (tab *ChromeTab) setDeviceMetricsAction() chromedp.Action}}
+Eine Hilfsfunktion, die eine \verb|chromedp.Action| erzeugt, mit der die Maße des Kontextes auf die absoluten Maße der Website in \verb|ContentSize| gesetzt werden kann.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Screenshot(ch chan ChromeTabReturns)}} Erzeugt und speichert einen Screenshot der aktuell geladenen Seite. Schreibt dann ein JSON - Formatiertes Ergebnis mit der URL an der der Screenshot gespeichert wurde in den Kanal der beim Aufruf übergeben wurde. Falls es während der Abarbeitung zu einem Fehler kommt, wird dieser statt der Daten in den Kanal geschrieben. Ist in der Lage nebenläufig zu anderen Aktionen zu laufen.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Pdf(ch chan ChromeTabReturns)}}  Erzeugt und speichert eine PDF Versoin der aktuelle geladenen Seite. Schreibt dann ein JSON - Formatiertes Ergebnis mit der URL an der die PDF gespeichert wurde in den Kanal der beim Aufruf übergeben wurde. Falls es während der Abarbeitung zu einem Fehler kommt, wird dieser statt der Daten in den Kanal geschrieben. Ist in der Lage nebenläufig zu anderen Aktionen zu laufen.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Content(ch chan ChromeTabReturns)}} 
+Schickt eine Anfrage an den es-extractor für die aktuell geladene Website den relevanten Text zu bestimmen. Lädt und speichert das Vorschaubild (Thumbnail). Ist in der Lage nebenläufig zu anderen Aktionen zu laufen.
+\paragraph{\mintinline{go}{func (tab *ChromeTab) Scrape(ch chan ChromeTabReturns)}}
+Kombiniert die Aktionen Screenshot, Pdf und Content um alle Informationen einer gegebenen Website zu extrahieren. Falls es während einer dieser Aktionen zu einem fatalen Fehler kommt, wird dieser zurückgegeben. Schreibt ein als JSON Formatiertes Ergebnis in den übergebenen Kanal. 
+\begin{table}[h]
+	\centering
+	\begin{tabu}{lX}
+		\toprule
+		Feld & Beschreibung \\ \midrule
+		\texttt{title} & Titel oder Überschrift der Website. \\
+		\texttt{raw\_content} & Relevanter Text der Website, komplett ohne Textformatierung. Dieses Feld sollte genutzt werden um Suchanfragen und ähnliches zu starten. \\
+		\texttt{markdown\_content} & Relevanter Text, der als Markdown \cite{markdown2016} formatiert ist. Dieses Feld sollte verwendet werden, um den Text anzuzeigen, da er die ursprüngliche Form des Artikels beibehält. Er kann auch Links zu Bildern enthalten, die heruntergeladen werden müssen. \\
+		\texttt{author} & Autor oder Editor der Seite / Artikels. \\
+		\texttt{date\_published} & Zeitpunkt zu dem die Website veröffentlicht wurde. \\
+		\texttt{dek} & Abstrakte Zusammenfassung des Artikels, die unter dem Titel steht. \\
+		\texttt{excerpt} & Ein kleiner Ausschnitt des Artikels, oft die ersten paar Sätze oder identisch mit dem \texttt{dek}. \\
+		\texttt{total\_pages} & Anzahl der Seiten (HTML Dokumente) über die sich dieser Artikel erstreckt.\\
+		\texttt{next\_page\_url} & URL der nächsten Seite (HTML Dokument) des Artikels, falls der Artikel aus mehreren Seiten besteht. \\
+		\texttt{rendered\_pages} & Anzahl der Seite (HTML Dokumente), die betrachtet wurden. \\
+		\texttt{url} & URL der Website. \\
+		\texttt{word\_count} & Anzahl der Wörter im relevanten Text auf der Seite. \\
+		\texttt{direction} & Vermutete Leserichtung des Artikels. Meistens \quote{ltr} oder \quote{rtl}. \\
+		\texttt{thumbnail} & Downloadurl an der das Thumbnail heruntergeladen werden kann. Kann leer sein.\\
+		\texttt{screenshot} & Downloadurl an der ein Screenshot der Seite heruntergeladen werden kann.  \\
+		\texttt{pdf} & Downloadurl an der die PDF Version der Seite heruntergelanden werden kann.  \\
+		\bottomrule
+	\end{tabu}
+	\caption{Rückgabewerte des es-scraper}
+	\label{scraper:table:scraper}
+\end{table}
+
+
+\subsection{Die Auftragswarteschlange}
+Eine Vielzahl von Tabs, die parallel diverse Aufgabe gleichzeitig bearbeiten benötigen eine Struktur, die sie kontrolliert und steuert. Um diese haben wir eine zusätzliche Auftragswarteschlange entwickelt, dieselbe Anzahl an Arbeiterthreads wie Tabs besitzt. \\
+Bei dieser Auftragswarteschlange handelt es sich um eine Kanal mit einem Typ \verb|task|:
+\begin{minted}[
+frame=lines, 
+framesep=2mm, 
+linenos, 
+baselinestretch=1.2, 
+fontsize=\footnotesize]{go}
+type task struct {
+  Action   string
+  URL      string
+  Callback chan cdptab.ChromeTabReturns
+}
+
+type ChromeTabReturns struct {
+  Data map[string]interface{} // Map containing unmarshaled json data.
+  Err  error
+}
+\end{minted}
+Ein \quote{Task} enthält also eine URL die zu bearbeiten ist und eine Aktion die auf dieser URL ausgeführt werden soll. Die Aktion wird durch den verwendeten Endpunkt bestimmt. Heißt, es könnte nur das Generieren einer PDF oder eines Screenshots sein, oder die Extraktion des relevanten Textes der URL oder es könnte ein vollständiger \quote{scrape} sein. Letzlich enthält eine Aufgabe, dann noch einen Kanal der von dem REST Interface erstellt wurde, als die Aufgabe in Auftrag gegeben wurde. Das REST Interface wartet dann auf ein beliebiges Datum in diesem Kanal (egal ob ein JSON Ergebnis oder ein Fehler) und schickt dieses Datum dann wieder an den Nutzer zurück und schließt die Verbindung. 
+
+Bei der Initialisierung werden alle Tabs in eine Liste mit einem Mutex eingetragen. Da die Zuordnung der Tabs zu einer Aufgabe eine critical section ist, sorgen wir mit dem Mutex dafür, dass immer nur ein Tab gleichzeitig einer Aufgabe zugeordnet werden kann. Wenn eine Aufgabe in der Warteschlange ankommt, wird sie, falls ein Arbeiterthread frei ist, entgegengenommen. Ansonsten muss die Aufgabe warten, bis ein Thread bereit ist, sie entgegenzunehmen. Ein Thread mit einer Aufgabe wird dann ein freier Tab zugeordnet, auf dem der Thread die Aufgabe bearbeiten kann. Dazu wird der Zugang zu der Liste der Tabs gesperrt, der nächste freie Tab ausgewählt und dieser dann als \quote{beschäftigt} markiert. Dann wird der Zugang auf die Liste der Tabs wieder freigegeben und der Thread beginnt mit der Arbeit. Am Ende wird der Tab wieder freigegeben und der Thread ist bereit eine neue Aufgabe entgegenzunehmen. \\ Mit dieser relativ simplen Struktur können wir sicherstellen, dass Aufgaben dann bearbeitet werden, wenn Ressourcen frei sind.
+
+\subsection{Schnittstellen}
+Der es-scraper stellt 4 Endpunkte zur Verfügung, die alle nur auf einen HTTP 1.1 POST Request mit \verb|ContentType: application/json| reagieren. Alle erwarten ein JSON Dokument mit einem \quote{url} Feld: \mint{json}{{"url" : "http://example.com"}}
+\paragraph{/scrape/content} Kommuniziert mit dem es-extractor um den relevanten Text der Website zu bestimmen und falls möglich, das Vorschaubild herunterzuladen. 
+\paragraph{/scrape/pdf} Lädt die Website im CDP und erzeugt eine PDF Version die gespeichert wird. Eine URL zum Herunterladen der Datei wird dann in einem JSON Dokument zurückgegeben.
+\paragraph{/scrape/screenshot} Lädt die Website im CDP und erzeugt einen Screenshot der gesamten Seite. Dieser wird abgespeichert und eine URL zum Herunterladen der Datei wird dann in einem JSON Dokument zurückgegeben.
+\paragraph{/scrape/all} Kombiniert alle oberen Endpunkte und gibt ein JSON Dokument mit den Feldern in \autoref{scraper:table:scraper} zurück.
+ 
+\subsection{Logging}
+Der es-scraper besitzt umfangreiche Protokollierung die einem Administrator erlaubt den Programmverlauf einzusehen. Standardmäßig werden die Protkolle auf \verb|stdout| ausgegeben. Protokolleinträge beschreiben wann eine Aufgabe auf einem Tab bearbeitet wird. Alle Protokolleinträge, die während der Bearbeitung erzeugt werden beginnen mit der ID des Tabs in eckigen Klammern. Für alle 5 Aktionen (Navigieren, Vollständiger Scrape, PDF, Screenshot, Inhalt) werden Einträge erzeugt, wenn diese Angefangen und wenn sie abgeschlossen ist. Fehlt die Nachricht, dass eine der Aufgaben abgeschlossen wurde, kann man davon ausgehen, dass dieser Tab aus irgendeinem Grund eingefroren ist. Weiterhin gibt es Protokolleinträge, die beschreiben wann ein Ergebnis geschrieben wird. Wird laut den Protokolleinträgen ein Ergebnis geschrieben, aber kommt nicht an, kann dieses im Netzwerk untergegangen sein.
+
+Wenn eine Instanz des es-scrapers im Kubernetes – Cluster läuft, sind die Protokolle
+mit folgendem Kommando erreichbar, wobei xxxxxxxx-yyyyy die ID des Pods ist, für den
+die Protokolle gewünscht sind. Alle existierenden Pods können mit \mintinline{bash}{kubectl get pods}
+bestimmt werden.
+\mint{bash}{kubectl logs es-scraper-deployment-xxxxxxxx-yyyyy es-scraper}
+Zusätzlich kann man den Schalter \verb|-f| hinzufügen, um die Protokolle fortlaufend anzuzeigen.
+
+\subsection{Fehlermeldungen}
+Fehlermeldungen, die nicht fatal sind, werden protokolliert und die Aufgabe weitergeführt. Falls es zu einem fatalen Fehler kommt, wird dieser ebenfalls protokolliert und dann wird die Ausführung der aktuellen Aufgabe abgebrochen und der Nutzer bekommt eine HTTP 1.1 Antwort mit einem Statuscode ungleich 200. Falls möglich wird ebenfalls ein JSON Dokument mit einer deskriptiven Nachricht zurückgegeben.
+
+
+
+
+
+
+
+
+
