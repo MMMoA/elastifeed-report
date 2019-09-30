@@ -114,7 +114,7 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
         Einige dieser Routen sind nur für registrierte Nutzer erreichbar. Darum werden diese durch eine Middleware, welche die Existenz und Korrektheit eines JSON Web Token prüft, geschützt. 
         
         \begin{center}
-            \includegraphics[width=\textwidth]{images/jwt-auth-process.png}
+            \includegraphics[width=\textwidth]{images/collector-jwt-auth-process.png}
             \caption{Schematischer Ablauf der Authentifizierungs-Middleware}
         \end{center}
         
