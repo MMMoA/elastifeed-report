@@ -18,7 +18,7 @@
     
     
     \subsection{Composer}
-        Laravel setzt zur Verwaltung von externen Abhängigkeiten auf Composer. Composer ist eine Paketverwaltung für die Programmiersprache PHP und wird über die Commandozeile ausgeführt.Die Abhängigkeiten der Software werden beim mit \texttt{composer install} installiert und in einem projektspezfiscihen \texttt{/vedor} Ordner gespeichert. Weitere Abhängigkeiten können mittels \texttt{composer require username/packageName} von Packagist, dem globalen PHP Package Repository installiert werden. Informationen über die Abhängigkeiten werden in einer \texttt{composer.json} festgehalten, wo ebefalls Informationen über Namensräume, Systembedingungen und das Projekt selbst enthalten sind. 
+        Laravel setzt zur Verwaltung von externen Abhängigkeiten auf Composer. Composer ist eine Paketverwaltung für die Programmiersprache PHP und wird über die Commandozeile ausgeführt. Die Abhängigkeiten der Software werden mit \texttt{composer install} installiert und in einem projektspezfiscihen \texttt{/vedor} Ordner gespeichert. Weitere Abhängigkeiten können mittels \texttt{composer require username/packageName} von Packagist, dem globalen PHP Package Repository installiert werden. Informationen über die Abhängigkeiten werden in einer \texttt{composer.json} festgehalten, wo ebefalls Informationen über Namensräume, die Systemumgebung und das Projekt selbst enthalten sind. 
         
         \begin{lstlisting}[caption={Ausschnitt composer.json für das Collector-System}]
 {
@@ -65,7 +65,7 @@
         Die \texttt{.env} Umgebungsdatei, enthält Variabeln, welche für die Systemumgebung spezifisch festgelegt sind. Im Collector-System werden dabei insbesondere die Datenbankverbindung und ein Link zum \texttt{es-pusher} hinterlegt.
         
     \subsection{Artisan}
-        Laravel wird mit einem Command-Line Tool namens Artisan mitgeliefert. Mit diesem Tool ist es möglich, das System zu installieren, zu erweitern und zu testen. Im Collector-System werden mittels Artisan die Sicherheits-Keys generiert, welche zur Authentifizierung benötigt werden und das Datenbankschema wird für die Nutzung des System vorbereitet.
+        Laravel wird mit einem Command-Line Tool namens Artisan mitgeliefert. Mit diesem Tool ist es möglich, das System zu installieren, zu erweitern und zu testen. Im Collector-System werden mittels Artisan die Sicherheits-Keys generiert, welche zur Authentifizierung benötigt werden und das Datenbankschema wird für die Nutzung des Systems vorbereitet.
         
         
         \begin{lstlisting}[caption={Installationsprozess mit Artisan und Composer}]
@@ -77,7 +77,7 @@ php artisan passport:install
 
 \section{Datentypen}
     Das Zentrale Collectorsystem verwaltet Nutzer und die damit verbundenen Daten.
-    Datenstrukturen werden in Laravel durch das sogenannte Eloquent ORM (Object-Relational Mapping) abstrahiert. Jede Datenbank-Tabelle wird im PHP-Code durch ein \texttt{Model} repräsentiert, welches genutzt werden kann um die realen Daten in der Datenbank abfzufragen oder zu manipulieren.
+    Datenstrukturen werden in Laravel durch das sogenannte Eloquent ORM (Object-Relational Mapping) abstrahiert. Bei Bedarf wird dabei eine Datenbank-Tabelle im PHP-Code durch ein \texttt{Model} repräsentiert, welches genutzt werden kann um die realen Daten in der Datenbank abfzufragen oder zu manipulieren.
     
     Das Collector-System besitzt drei große Datentypen, welche mit dem Eloquent ORM im System verwendet werden.
     
@@ -99,15 +99,14 @@ php artisan passport:install
 
 \section{REST-Schnittstelle}
 
-    Im Laravel-System werden Schnittstellen-Routen über die \texttt{routes/api.php} definiert. Alle Anfragen an das System, welche nicht von einem Browser ausgehen werden hier aufgelöst.
+    Im Laravel-System werden Endpunkte der Schnittstelle als Route über die \texttt{routes/api.php} definiert. Alle Anfragen an das System, welche nicht von einem Browser ausgehen werden hier aufgelöst.
     
-    Eine Routendefinition besteht aus dem Pfad, und einem Controller, welcher mit einer definierten Methode die Anfrage beantworten soll. Der Pfad kann dabei beliebig viele Platzhalter enthalten, welche dynamisches generieren von Routen ermöglicht. Nach diesem Prinzip wurden für alle Datentypen die nötigen REST-Endpunkte aufgebaut.
+    Eine Routendefinition besteht aus dem Pfad und einem Controller, welcher mit einer bestimmten Methode die Anfrage beantworten soll. Der Pfad kann dabei beliebig viele Platzhalter enthalten, was dynamische Routen ermöglicht. Nach diesem Prinzip wurden für alle Datentypen die nötigen REST-Endpunkte aufgebaut.
     
     Im folgenden sehen Sie ein Beispiel einer Routendefinition, bei der ein \texttt{DELETE}-Request auf \texttt{/feeds/{id}} die \texttt{removeFeeed} Methode des \texttt{app/Http/Controllers/API/FeedController}-Controllers aufruft. Der Platzhalter \texttt{{id}} ist hier in seiner Form auf einen numerischen Wert mit mindestens einem Zeichen festgelegt.
 
     \begin{lstlisting}
-Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
-    ->where('id', '[0-9]+');
+Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')->where('id', '[0-9]+');
     \end{lstlisting}
     
     \subsection{Authentifizierung mittels JWT}
@@ -118,7 +117,7 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
             \caption{Schematischer Ablauf der Authentifizierungs-Middleware}
         \end{center}
         
-        JSON Web Tokens (JWT) wurden mit der RFC 7519 international standartisiert und sind ein einmalig generierte Token, welches nach Ausstellung für viele Anfragen an eine Schnittstelle genutzt werden können um den Nutzer zu identifizieren und autorisieren. Im Gegensatzt zur herkömlichen Name, Passwort Authentifizierung muss zwischen den einzelnen Anfragen nur das Token und nicht ein Passwort im Klartext zwischengespeichert werden.
+        JSON Web Tokens (JWT) wurden mit der RFC 7519 international standartisiert und sind ein einmalig generierte Token, welches, nach Ausstellung für viele Anfragen an eine Schnittstelle, genutzt werden können, um den Nutzer zu identifizieren und autorisieren. Im Gegensatzt zur herkömlichen Name, Passwort Authentifizierung muss zwischen den einzelnen Anfragen nur das Token und nicht ein Passwort im Klartext zwischengespeichert werden.
 
         Im Collector-System wird das JWT im \texttt{/v1/login}-Endpunkt ausgestellt, wenn Benutzername und Passwort korrekt sind und gewährt Zugriff auf alle Nutzerspezifischen Endpunkte der REST-Schnittstelle. Voraussetzung ist dessen Präsenz im Authorization Header nach dem Bearer Schema (\texttt{Bearer: <token>}) bei jeder Anfrage.
         
@@ -130,7 +129,7 @@ Route::delete('/feeds/{id}', 'API\FeedController@removeFeed')
             \item Signatur: Header, Inhalt und ein 256 bit Key werden gemeinsam mit dem im Header definiertem Algorithmus gehasht. Die Signatur wird dazu genutzt das Token zu verifizieren.
         \end{itemize}
         
-        Alle Teile des JTW mittels Base64URL Encode umgewandelt und anschließend punktsepariert zum finalen Token zusammengefügt.
+        Alle Teile des JTW werden mittels Base64URL Encode kodiert und anschließend punktsepariert zum finalen Token zusammengefügt.
         
         \begin{center}
             \textbf{Exemplarisches JWT nach Erzeugung} \\
@@ -176,8 +175,6 @@ Route::post('/page', 'API\PageController@pushNew');
             \begin{lstlisting}
 Route::post('/login', 'API\UserAuthController@login');
 Route::post('/register', 'API\UserAuthController@register');
-
-// Nur eingeloggte Nutzer
 Route::group(['middleware' => 'auth:api'], function (){
     Route::get('/me', 'API\UserAuthController@getCurrentUser');
 });
@@ -185,9 +182,9 @@ Route::group(['middleware' => 'auth:api'], function (){
 
 
 \section{Speichern von Seiten}
-    Eine weitere Anforderung am Projekt war es, dass ein Nutzer während er im Browser eine Seite betrachtet sofort diese im elastifeed-System abspeichern kann. Es muss also möglich sein, aus dem Browser, ohne das Fenster oder den Tab zu wechseln eine Webseite oder einen Feed im System abspeichern zu können. Mit einem Browser-Plugin kann diese Funktion zwra realisiert werden, doch es müsste für alle gängigen Browser ein seperates Plugin entwickelt werden. Je nach Browser unterscheiden sich Anforderungen und Möglichkeiten, was die Bereitstellung eines einheitlichem und zukunftssicherem Systems erschwert. Um den Aufwand klein zu halten, stellen wir ein Bookmarklet bereit, welches den Nutzer in eine Web-Application, den Client-Pusher, führt, wo die Seite final im System gespeichert werden kann.
+    Eine weitere Anforderung am Projekt war es, dass ein Nutzer, während er im Browser eine Seite betrachtet, diese sofort im elastifeed-System abspeichern kann. Es muss also möglich sein, aus dem Browser, ohne das Fenster oder den Tab zu wechseln eine Webseite oder einen Feed im System abspeichern zu können. Mit einem Browser-Plugin kann diese Funktion zwar realisiert werden, doch es müsste für alle gängigen Browser ein seperates Plugin entwickelt werden. Je nach Browser unterscheiden sich technische Voraussetzungen und Möglichkeiten, was die Bereitstellung eines einheitlichem und zukunftssicherem Systems erschwert. Um den Aufwand klein zu halten, stellen wir ein Bookmarklet bereit, welches den Nutzer in eine Web-Application, den Client-Pusher, führt, wo die Seite final im System gespeichert werden kann.
     
-    Da das Collector-System als öffentliche Schnittstelle bereits von außen erreichbar ist, wird das Bookmarklet und die Web-Application über das Laravel-System ausgegeben.
+    Da das Collector-System als öffentliche Schnittstelle bereits von außen erreichbar ist, wird das Bookmarklet und der Client-Pusher über das Laravel-System bereitgestellt.
     
     \subsection{Bookmarklet}
         Ein Bookmarklet ist ein Link, welcher auf Klick JavaScript-Code im aktuellem Browser-Tab ausführt. Dieser Link kann ganz einfach mittels Drag-and-Drop in die Lesezeichen-Leiste jedes Browser gezogen werden, womit der Nutzer von überall auf den JavaScript-Code zugreifen kann.
@@ -203,13 +200,15 @@ hello world bookmarklet
     \subsection{Client-Pusher}
         Der Client-Pusher ist eine eigenständige Web-Applikation basierend auf dem weit verbreitetem JavaScript-Framework React. React ist darauf spezialisiert dynamische Nutzeroberflächen im Browser darzustellen und wir vom Collector-System bereitgestellt. Der Client-Pusher kommuniziert dabei zur Laufzeit mit der REST-Schnittstelle des Collector-Systems um die Seiten- oder RSS-Feed-Daten vorzubereiten und schließlich im System zu speichern.
 
+        Abhängig vom zu speicherndem Inhalt, kann der Nutzer individuelle Metadaten hinterlegen und anschließend den finalen Speichervorgang bestätigen.
+
         \begin{center}
             \includegraphics[width=\textwidth]{images/collector-pusher-process.png}
             \caption{Ablauf im Client-Pusher Systems}
         \end{center}
         
         \subsubsection{npm und die package.json}
-            Im JavaScript Ökosystem wird der node package manager (npm) verwendet um Abhängigkeiten zu verwalten. Ähnlich Composer können Abhängigkeiten mittels \texttt{npm install} installiert werden und weitere Pakete mittels \texttt{npm install paketname} hinzugefügt werden. Informationen über die Abhängigkeiten werden in einer \texttt{package.json} festgehalten, wo ebenfalls Scripts definiert werden können, welche für Build-Prozesse verwendet werden.
+            Im JavaScript Ökosystem wird der node package manager (npm) verwendet um Abhängigkeiten zu verwalten. Ähnlich Composer können Abhängigkeiten mittels \texttt{npm install} installiert werden und weitere Pakete mittels \texttt{npm install paketname} hinzugefügt werden. Informationen über die Abhängigkeiten werden in der \texttt{package.json} festgehalten, wo ebenfalls Scripts definiert werden können, welche für Build- und Compile-Prozesse verwendet werden.
             
             \begin{lstlisting}[caption=Ausschnitt package.json des Client-Pushers]
 {
